@@ -1,0 +1,47 @@
+.merchant-page-app {
+  background-color: #fbfbfb;
+  padding-bottom: 100px;
+  min-height: 100vh;
+}
+.merchant-page-app header {
+  padding: 20px;
+  text-align: center;
+}
+
+.merchant-page-app .items {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  gap: 10px;
+  padding: 10px;
+}
+
+.merchant-page-app .item {
+  flex: 0 1 calc(50% - 10px);
+  box-sizing: border-box;
+  text-align: center;
+  border: 1px solid #eee;
+  padding: 5px;
+
+  background: #fff;
+}
+.merchant-page-app .item .image {
+  margin-bottom: 25px;
+}
+.merchant-page-app .item .image img {
+  width: 100%; /* الصورة تملأ العنصر */
+  height: auto; /* تحافظ على النسبة */
+  border-radius: 8px; /* شكل جميل للحواف */
+}
+.merchant-page-app .item h6 {
+  font-size: 12px;
+  font-weight: bold;
+}
+.merchant-page-app .search-bar{
+  margin: 0 10px;
+}
+.merchant-page-app .search-merchant {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #eee;
+}

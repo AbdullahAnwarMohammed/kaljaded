@@ -1,0 +1,56 @@
+.PageProductByCategory{
+  padding-bottom: 100px;
+}
+.PageProductByCategory .title {
+  background-color: #283158;
+  color: #fff;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+}
+.PageProductByCategory .title h4 {
+  margin: 0 auto;
+  font-size: 18px;
+}
+.PageProductByCategory .title span svg {
+  font-size: 27px;
+}
+
+.PageProductByCategory .subcategory {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  gap: 20px;
+  padding: 10px 0;
+  margin: 0 10px;
+}
+.PageProductByCategory .subcategory a {
+  color: #555;
+  font-size: 15px;
+}
+.PageProductByCategory .subcategory a.active {
+  background-color: #435292;
+  color: #fff;
+  padding: 4px 21px;
+  border-radius: 9px;
+}
+.PageProductByCategory .products-row {
+  display: flex;
+  flex-direction: column;
+}
+
+.PageProductByCategory .products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 70px;
+  margin-bottom: 50px;
+  margin-top: 20px;
+}
+
+/* للهواتف الصغيرة */
+@media (max-width: 480px) {
+  .PageProductByCategory .products-grid {
+    grid-template-columns: repeat(2, 1fr); /* عنصرين في الصف */
+    gap: 10px;
+  }
+}

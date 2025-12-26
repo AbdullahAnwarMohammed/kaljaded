@@ -1,0 +1,146 @@
+.register-customer-page {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  flex-direction: column;
+  color: #fff;
+  background-color: #435292;
+  text-align: center;
+  gap: 30px;
+  padding-top: 90px;
+  padding-bottom: 50px;
+}
+.register-customer-page .logo {
+  width: 250px;
+}
+
+.register-customer-page  header {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  padding: 10px;
+  gap: 25px;
+  align-items: center;
+}
+.register-customer-page  header h6 {
+  margin: 0;
+  font-size: 14px;
+}
+.register-customer-page  header svg {
+  color: #fff;
+  font-size: 23;
+}
+
+/* .register-customer-page .icon-back {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 32px;
+  color: #fff;
+} */
+
+.register-customer-page .app-register h3:first-child {
+  font-size: 17px;
+}
+
+.register-customer-page .app-register {
+  width: 90%;
+}
+
+.register-customer-page .app-register input {
+  padding: 20px;
+  border-radius: 10px;
+  border: none;
+  background-color: #e9eaec;
+  font-size: 11px;
+}
+.register-customer-page .app-register form button {
+  width: 80%;
+  background: none;
+  border: 2px solid #fff;
+  color: #fff;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+
+/* تغليف الحقول بالأيقونات */
+.register-customer-page .app-register  .form-group {
+  margin: 15px 0;
+}
+.register-customer-page .app-register  .form-group.with-icon {
+  position: relative;
+}
+
+.register-customer-page .app-register  .field-icon {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 20px;
+  color: #888;
+}
+
+.register-customer-page .app-register  .form-group.with-icon input {
+  padding-right: 45px;
+}
+
+/* إظهار/إخفاء الباسورد */
+.register-customer-page .app-register  .show-pass {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 20px;
+  cursor: pointer;
+  color: #555;
+}
+
+/* رقم الهاتف */
+.register-customer-page .app-register  .phone-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #e9eaec;
+  border-radius: 8px;
+  padding: 5px 10px;
+  border: 1px solid #ddd;
+}
+
+.register-customer-page .app-register  .phone-field .country {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.register-customer-page .app-register  .phone-field .country img {
+  width: 28px;
+  border-radius: 4px;
+}
+
+.register-customer-page .app-register  .phone-field span {
+  font-size: 16px;
+  color: #333;
+  font-weight: bold;
+}
+
+.register-customer-page .app-register  .phone-input {
+  border: none;
+  flex: 1;
+  outline: none;
+  padding: 10px 5px;
+}
+.input-error {
+    border: 1px solid #ff4d4f !important;
+}
+
+.error-msg {
+    color: #ff4d4f;
+    font-size: 12px;
+    margin-top: 5px;
+    display: block;
+    font-weight: bold;
+}

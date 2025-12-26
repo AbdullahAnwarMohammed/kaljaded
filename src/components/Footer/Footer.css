@@ -1,0 +1,40 @@
+.footer-mobile {
+  display: flex;
+  justify-content: space-between;
+  background-color: #283158;
+  padding: 13px 10px;
+  position: fixed;
+  bottom: 0;
+  z-index: 999999999999;
+  width: 100%;
+}
+.footer-mobile p {
+  margin: 0;
+  font-size: 12px;
+}
+.footer-mobile .item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.footer-mobile .item a {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+  position: relative;
+}
+
+.footer-mobile .item a span {
+  position: absolute;
+  top: -8px;
+  right: -13px;
+}
+.footer-mobile .item a span.offer-badge {
+  right: -32px;
+}
+.footer-mobile .item a svg {
+  font-size: 21px;
+}

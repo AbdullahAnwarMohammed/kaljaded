@@ -1,0 +1,37 @@
+.search {
+  background-color: var(--color-main-two);
+  padding: 5px 0;
+}
+.search ::placeholder {
+  color: #191919 !important;
+}
+.search .app-search {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin: auto;
+  gap: 20px;
+}
+.search .app-search .location-dot {
+  color: var(--color-white) !important;
+  font-size: 25px;
+}
+.search .app-search form {
+  width: 100%;
+  position: relative;
+}
+.search .app-search form input {
+    padding: 6px 51px;
+  font-size: 13px;
+  border-radius: 20px;
+}
+.search .app-search form button {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 27px;
+  color: #1ba195;
+}

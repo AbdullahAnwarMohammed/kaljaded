@@ -1,0 +1,359 @@
+/* تنسيقات عامة */
+.merchant-details-page {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    padding: 20px;
+    direction: rtl;
+    margin-bottom: 100px;
+}
+
+/* ترويسة التاجر */
+.merchant-header {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    padding: 30px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 30px;
+    gap: 30px;
+}
+
+.merchant-image {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 5px solid #f0f0f0;
+    flex-shrink: 0;
+}
+
+.merchant-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.merchant-info {
+    flex: 1;
+}
+
+.merchant-name {
+    font-size: 28px;
+    color: #333;
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+.merchant-rating {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.rating-stars {
+    color: #ffc107;
+    font-size: 18px;
+    letter-spacing: 2px;
+}
+
+.rating-value {
+    font-weight: bold;
+    color: #333;
+}
+
+.rating-count {
+    color: #777;
+    font-size: 14px;
+}
+
+.merchant-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 20px;
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.meta-item {
+    display: flex;
+    flex-direction: column;
+    min-width: 120px;
+}
+
+.meta-label {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.meta-value {
+    font-weight: 600;
+    color: #333;
+    font-size: 16px;
+}
+
+.merchant-description {
+    color: #555;
+    line-height: 1.6;
+    font-size: 16px;
+    max-width: 800px;
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border-right: 4px solid #007bff;
+}
+
+/* قسم المنتجات */
+.merchant-products-section {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    padding: 30px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.section-title {
+    font-size: 24px;
+    color: #333;
+    font-weight: 700;
+}
+
+.products-count {
+    background-color: #007bff;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+/* شبكة المنتجات */
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 25px;
+}
+
+.product-card {
+    background-color: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s, box-shadow 0.3s;
+    border: 1px solid #eee;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.product-image-container {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+}
+
+.product-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s;
+}
+
+.product-card:hover .product-image {
+    transform: scale(1.05);
+}
+
+.product-discount {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background-color: #dc3545;
+    color: white;
+    font-weight: bold;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+}
+
+.product-info {
+    padding: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.product-name {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 10px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.product-description {
+    color: #666;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 15px;
+    flex: 1;
+}
+
+.product-price {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.current-price {
+    font-size: 22px;
+    font-weight: bold;
+    color: #007bff;
+}
+
+.original-price {
+    font-size: 16px;
+    color: #999;
+    text-decoration: line-through;
+}
+
+.product-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.product-rating {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.product-rating .rating-stars {
+    font-size: 16px;
+}
+
+.product-rating .rating-value {
+    font-size: 14px;
+}
+
+.product-stock .in-stock {
+    color: #28a745;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.product-stock .out-of-stock {
+    color: #dc3545;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.product-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: auto;
+}
+
+.btn-add-to-cart {
+    flex: 1;
+    background-color: #283158;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-size: 15px;
+}
+
+.btn-add-to-cart:hover {
+    background-color: #0056b3;
+}
+
+.btn-view-details {
+    flex: 1;
+    background-color: transparent;
+    color: #007bff;
+    border: 1px solid #007bff;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 15px;
+}
+
+.btn-view-details:hover {
+    background-color: #007bff;
+    color: white;
+}
+
+/* تصميم متجاوب */
+@media (max-width: 992px) {
+    .products-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .merchant-header {
+        flex-direction: column;
+        text-align: center;
+        padding: 20px;
+    }
+    
+    .merchant-meta {
+        justify-content: center;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .products-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+}
+
+@media (max-width: 576px) {
+    .merchant-details-page {
+        padding: 10px;
+    }
+    
+    .merchant-header,
+    .merchant-products-section {
+        padding: 15px;
+    }
+    
+    .products-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .product-actions {
+        flex-direction: column;
+    }
+}
