@@ -1,47 +1,285 @@
-.merchant-page-app {
-  background-color: #fbfbfb;
-  padding-bottom: 100px;
+/* Merhant.css - Premium Modern Design */
+
+.merchant-page {
+  background-color: #f8f9fa;
   min-height: 100vh;
+  padding: 0 0 80px;
+  font-family: inherit;
 }
+
+.merchant-page-app {
+  max-width: 1200px;
+  margin: 0 auto;
+  /* padding: 0 6px; */
+}
+
+/* === Header (Matching Product Details 100%) === */
+.merchant-header-page {
+    background: #fff;
+    padding: 8px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.merchant-header-page .icon-back {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: #f0f2f5;
+    border-radius: 50%;
+    color: #333;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.merchant-header-page .icon-back:hover {
+    background: #e4e6eb;
+    color: #000;
+}
+
+.merchant-header-page h6 {
+    margin: 0;
+    font-weight: 700;
+    font-size: 1.1rem;
+    flex-grow: 1;
+    text-align: center;
+    color: #1a1a1a;
+}
+
+/* Page Title (Optional if you add one later) */
 .merchant-page-app header {
-  padding: 20px;
   text-align: center;
+  margin-bottom: 30px;
 }
 
+.merchant-page-app header h2 {
+  font-size: 1.8rem;
+  color: #283158;
+  font-weight: 800;
+}
+
+/* Grid Layout */
 .merchant-page-app .items {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-around;
-  gap: 10px;
-  padding: 10px;
+  display: grid;
+  /* Responsive grid: min 160px width per card, fills available space */
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 20px;
+  padding: 10px 0;
 }
 
+/* Merchant Card */
 .merchant-page-app .item {
-  flex: 0 1 calc(50% - 10px);
-  box-sizing: border-box;
-  text-align: center;
-  border: 1px solid #eee;
-  padding: 5px;
-
   background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid rgba(0, 0, 0, 0.03);
+  padding-bottom: 15px;
+  cursor: pointer;
+  text-decoration: none;
+  height: 100%;
 }
+
+.merchant-page-app .item:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  border-color: rgba(40, 49, 88, 0.1);
+}
+
+/* Image Container */
 .merchant-page-app .item .image {
-  margin-bottom: 25px;
-}
-.merchant-page-app .item .image img {
-  width: 100%; /* الصورة تملأ العنصر */
-  height: auto; /* تحافظ على النسبة */
-  border-radius: 8px; /* شكل جميل للحواف */
-}
-.merchant-page-app .item h6 {
-  font-size: 12px;
-  font-weight: bold;
-}
-.merchant-page-app .search-bar{
-  margin: 0 10px;
-}
-.merchant-page-app .search-merchant {
   width: 100%;
-  padding: 10px;
-  border: 1px solid #eee;
+  height: 160px; /* Fixed height for consistency */
+  background: #fff;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.merchant-page-app .item .image img {
+  width: 100%;
+  height: 100%;
+  padding: 5px; /* Padding inside image area */
+  transition: transform 0.5s ease;
+  mix-blend-mode: multiply; /* Helps transparent logos blend nicely implies white bg */
+}
+
+/* On hover, slightly zoom image */
+.merchant-page-app .item:hover .image img {
+  transform: scale(1.08);
+}
+
+/* Merchant Name */
+.merchant-page-app .item a {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #333;
+  text-decoration: none;
+  text-align: center;
+  padding: 0 10px;
+  display: -webkit-box;
+  -webkit-line-clamp: 1; /* Limit lines if name is too long */
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color 0.3s;
+}
+
+.merchant-page-app .item:hover a {
+  color: #283158; /* Brand color on hover */
+}
+
+/* Loading & End Message */
+.merchant-page p {
+  color: #777;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+/* Dark Mode Support (Optional Future Proofing) */
+@media (prefers-color-scheme: dark) {
+  /* Add dark mode specific overrides here if requested later */
+}
+
+/* Mobile Adjustments */
+@media (max-width: 576px) {
+  .merchant-page-app .items {
+    grid-template-columns: repeat(2, 1fr); /* 2 columns on mobile */
+    gap: 6px;
+  }
+
+  .merchant-page-app .item .image {
+    height: 130px; /* Smaller image on mobile */
+  }
+
+  .merchant-page-app .item a {
+    font-size: 0.9rem;
+  }
+}
+
+/* === Search Bar === */
+.search-container-merchant {
+  margin-bottom: 25px;
+  position: relative;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.search-container-merchant input {
+  width: 100%;
+  padding: 14px 20px;
+  padding-right: 50px;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  background: #fff;
+  font-size: 1rem;
+  color: #333;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.search-container-merchant input:focus {
+  border-color: #283158;
+  box-shadow: 0 4px 20px rgba(40, 49, 88, 0.1);
+}
+
+.search-container-merchant .search-icon {
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  transform: translateY(-50%);
+  color: #888;
+  font-size: 1.4rem;
+  pointer-events: none;
+}
+
+/* Cities Scrollable Tabs */
+.merchant-cities-tabs {
+  display: flex;
+  overflow-x: auto;
+    gap: 5px;
+    padding: 7px 5px;
+  margin-bottom: 20px;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE */
+      background: #283158;
+}
+
+.merchant-cities-tabs::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+.city-tab {
+  white-space: nowrap;
+    padding: 5px 16px;
+  border-radius: 20px;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+  user-select: none;
+}
+
+.city-tab.active {
+  background-color: #fff;
+  color: #283158;
+  border-color: #fff;
+  box-shadow: 0 4px 10px rgba(40, 49, 88, 0.2);
+}
+
+/* No Merchants Found Empty State */
+.no-merchants-found {
+    width: 100%;
+    grid-column: 1 / -1; /* Span all columns */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    border-radius: 16px;
+    text-align: center;
+}
+
+.no-merchants-found .icon-wrapper {
+    width: 80px;
+    height: 80px;
+    /* background: #f5f6fa; */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    color: #283158;
+    font-size: 4.5rem;
+}
+
+.no-merchants-found h3 {
+    margin: 0 0 10px;
+    color: #283158;
+    font-size: 1.3rem;
+    font-weight: 800;
+}
+
+.no-merchants-found p {
+    margin: 0;
+    color: #8898aa;
+    font-size: 0.95rem;
+    max-width: 400px;
+    line-height: 1.6;
 }

@@ -1,122 +1,89 @@
-import React, { useState, useEffect, useContext } from "react";
 import { FaRegHeart, FaHeart, FaRegEye } from "react-icons/fa";
 import { BsFillGiftFill } from "react-icons/bs";
-import { Link } from "react-router-dom";
-// import { FavoritesContext } from "../../context/FavoritesContext";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import LazyImage from "../LazyImage/LazyImage";
+import { addToCart } from "../../api/cartApi";
+import { useCart } from "../../context/CartContext";
+import { useState } from "react";
+import "./CategorySection.css";
 
-const ProductCard = ({ p }) => {
-  // const { favorites, addFavorite, removeFavorite } =
-    // useContext(FavoritesContext);
+const ProductCard = ({ p, showFastBadge = false }) => {
   const { t } = useTranslation();
-  // console.log(p);
   const images = p.images && p.images.length ? p.images : [p.image];
-  const [currentImg, setCurrentImg] = useState(0);
-  const [dragStart, setDragStart] = useState(null);
-  const [offsetX, setOffsetX] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [hover, setHover] = useState(false);
-  // ===== Favorite logic =====
-  // const favItem = favorites.find((item) => item.product.id === p.id);
-  // const isFavorite = Boolean(favItem);
-  // const toggleFavorite = (e) => {
-  //   e.preventDefault();
-  //   e.stopPropagation();
-  //   if (isFavorite && favItem) {
-  //     removeFavorite(favItem.id);
-  //   } else {
-  //     addFavorite(p.id);
-  //   }
-  // };
+  const navigate = useNavigate();
+  const { cart, fetchCart } = useCart();
+  const [loading, setLoading] = useState(false);
 
+  // Check if product is already in cart
+  const isInCart = cart?.items?.some((item) => item.product.id === p.id);
 
+  // Check if product is fast (within 1 hour)
+  const isFast = () => {
+      if (p.fast_by !== 1) return false;
+      if (!p.date) return false;
 
-  // ===== Image slider =====
-  useEffect(() => {
-    if (!hover || dragStart !== null) return;
-    const interval = setInterval(() => {
-      setCurrentImg((prev) =>
-        prev + 1 < images.length ? prev + 1 : 0
-      );
-    }, 1500);
-    return () => clearInterval(interval);
-  }, [hover, dragStart, images.length]);
+      const productDate = new Date(p.date); 
+      const now = new Date();
+      const diffInMs = now - productDate;
+      const diffInHours = diffInMs / (1000 * 60 * 60);
 
-  const startDrag = (x) => {
-    setDragStart(x);
-    setIsAnimating(false);
+      return diffInHours <= 1;
   };
 
-  const dragMove = (x) => {
-    if (dragStart !== null) setOffsetX(x - dragStart);
-  };
+  const shouldShowFastBadge = showFastBadge && isFast();
 
-  const endDrag = () => {
-    if (dragStart === null) return;
-    if (offsetX > 50 && currentImg > 0) setCurrentImg(currentImg - 1);
-    else if (offsetX < -50 && currentImg < images.length - 1)
-      setCurrentImg(currentImg + 1);
+  const handleBuyNow = async () => {
+    const token = localStorage.getItem("customer_token");
 
-    setIsAnimating(true);
-    setOffsetX(0);
-    setDragStart(null);
+    if (!token) {
+      navigate("/login-customer");
+      return;
+    }
+
+    if (isInCart) {
+      navigate("/carts");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await addToCart(p.id, 1);
+      if (res.data.success) {
+        await fetchCart();
+        navigate("/carts");
+      }
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="product-card">
-      <div
-        className="image"
-        style={{ overflow: "hidden", position: "relative", touchAction: "none" }}
-        onMouseEnter={() => setHover(true)}
-        onMouseLeave={() => {
-          setHover(false);
-          endDrag();
-        }}
-        onMouseDown={(e) => startDrag(e.clientX)}
-        onMouseMove={(e) => {
-          if (dragStart !== null) {
-            e.preventDefault();
-            dragMove(e.clientX);
-          }
-        }}
-        onMouseUp={endDrag}
-        onTouchStart={(e) => startDrag(e.touches[0].clientX)}
-        onTouchMove={(e) => {
-          if (dragStart !== null) dragMove(e.touches[0].clientX);
-        }}
-        onTouchEnd={endDrag}
-      >
-        <Link to={`product/${p.slug}`}>
-          <img
-            src={images[currentImg]}
+      <div className="image" style={{ overflow: "hidden", position: "relative" }}>
+        <Link to={`/product/${p.id}/${p.slug}`}>
+          <LazyImage
+            src={images[0]} // أول صورة فقط
             alt={p.name}
             style={{
               width: "100%",
-              transform: `translateX(${offsetX}px)`,
-              transition: isAnimating ? "0.25s ease" : "none",
+              borderRadius: "10px",
+              boxShadow: "0 10px 20px rgba(0,0,0,0.2)",
             }}
           />
         </Link>
 
-        {/* <span
-          className="favorite-icon"
-          onClick={toggleFavorite}
-          style={{
-            position: "absolute",
-            top: "10px",
-            left: "10px",
-            fontSize: "1.5rem",
-            color: isFavorite ? "red" : "white",
-            cursor: "pointer",
-            zIndex: 10,
-          }}
-        >
-          {isFavorite ? <FaHeart /> : <FaRegHeart />}
-        </span> */}
-
         <span className="count-show badge bg-white text-dark">
           {p.views} <FaRegEye />
         </span>
+
+        {shouldShowFastBadge && (
+             <span className="badge bg-warning text-dark" style={{ position: 'absolute', top: '12px', left: '10px', fontSize: '10px' }}>
+                 Fast
+             </span>
+        )}
 
         <div className="info">
           {p.device_clean === 100 && <div className="new">جديد</div>}
@@ -128,28 +95,51 @@ const ProductCard = ({ p }) => {
         </div>
       </div>
 
-      <p className="product-name">{p.name}</p>
-      {p.device_clean !== 100 && (
-        <div
-          className="info-one"
-          style={{
-            background: `linear-gradient(to left, #afffb3 ${p.device_clean}%, #eee ${p.device_clean}%)`,
-          }}
-        >
-          <h6>{t("like_new")}</h6>
-          <p>{p.device_clean}%</p>
-        </div>
-      )}
-      <div className="info-two">
-        <p>K.D {p.price}</p>
-        {p.price_active && <p>{t("available_installments")}</p>}
-      </div>
 
-      {p.price_active ? (
-        <a className="try-free">{t("try_free")}</a>
-      ) : (
-        <a className="buy-now">{t("buy_now")}</a>
-      )}
+      <div className="content">
+        <Link to={`/product/${p.id}/${p.slug}`}>
+          <p className="product-name" title={p.name}>{p.name}</p>
+
+        </Link>
+        {p.device_clean !== 100 && (
+          <div
+            className="info-one"
+            style={{
+              background: `linear-gradient(to left, #afffb3 ${p.device_clean}%, #eee ${p.device_clean}%)`,
+            }}
+          >
+            <h6>{t("like_new")}</h6>
+            <p>{p.device_clean}%</p>
+          </div>
+        )}
+        <div className="info-two">
+          <p>K.D {p.price}</p>
+          {p.price_active ? <p>{t("available_installments")}</p> : ""}
+        </div>
+
+        {p.price_active ? (
+          <Link to={`/product/${p.id}/${p.slug}`}>
+            <p className="try-free">{shouldShowFastBadge ? t("fast_sale") : t("try_free")}</p>
+          </Link>
+        ) : (
+          <p 
+            className="buy-now" 
+            onClick={handleBuyNow} 
+            style={{ 
+              cursor: loading ? "wait" : "pointer", 
+              opacity: loading ? 0.7 : 1,
+              background: isInCart ? "#28a745" : "" 
+            }}
+          >
+            {loading 
+              ? t("loading") 
+              : isInCart 
+                ? t("product_added") 
+                : t("buy_now")
+            }
+          </p>
+        )}
+      </div>
     </div>
   );
 };

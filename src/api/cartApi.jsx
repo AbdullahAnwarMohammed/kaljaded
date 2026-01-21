@@ -1,4 +1,5 @@
 import Api from "../Services/Api";
+import { getGuestToken } from "../utils/guestToken";
 
 // جلب السلة الحالية (Guest أو User)
 export const getCart = () => {
@@ -29,7 +30,14 @@ export const removeCartItem = (id) => {
 // دمج سلة Guest في سلة المستخدم بعد تسجيل الدخول
 // ===============================
 export const mergeGuestCart = () => {
-  return Api.post("/cart/merge");
+  const guestToken = getGuestToken(); // جلب أو توليد الـ token
+  return Api.post(
+    "/cart/merge",
+    {}, // body فاضية لو مش محتاج ترسل بيانات
+    {
+      headers: {
+        "X-Guest-Token": guestToken, // إرسال الـ guest token
+      },
+    }
+  );
 };
-
-

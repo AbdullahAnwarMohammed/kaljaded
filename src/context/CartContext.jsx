@@ -9,33 +9,37 @@ export const CartProvider = ({ children }) => {
 
   const calculateCount = (cart) => {
     if (!cart?.items) return 0;
-    return cart.items.reduce(
-      (total, item) => total + item.quantity,
-      0
-    );
+    return cart.items.reduce((total, item) => total + item.quantity, 0);
   };
 
   const fetchCart = async () => {
-    const res = await getCart();
-    if (res.data.success) {
-      setCart(res.data.data.cart);
-      setCartCount(calculateCount(res.data.data.cart));
+    try {
+      const res = await getCart();
+      if (res.data.success) {
+        setCart(res.data.data.cart);
+        setCartCount(calculateCount(res.data.data.cart));
+        return res.data.data.cart;
+      }
+    } catch (err) {
+      console.log(err);
     }
+    return null;
   };
 
   useEffect(() => {
     fetchCart();
   }, []);
 
+  const value = React.useMemo(() => ({
+    cart,
+    setCart,
+    cartCount,
+    setCartCount,
+    fetchCart,
+  }), [cart, cartCount]); // calculateCount is internal, not needed in deps if fetchCart is stable
+
   return (
-    <CartContext.Provider
-      value={{
-        cart,
-        cartCount,
-        fetchCart,
-        setCart
-      }}
-    >
+    <CartContext.Provider value={value}>
       {children}
     </CartContext.Provider>
   );

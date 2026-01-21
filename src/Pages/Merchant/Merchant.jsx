@@ -1,93 +1,204 @@
 import { useEffect, useState } from "react";
 import "./Merhant.css";
-import { FaBuildingUser } from "react-icons/fa6";
 import imgPlaceholder from "../../assets/merchmant.jpg";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Api from "../../Services/Api";
+import { RiSearchLine, RiArrowRightLine, RiStore3Line } from "react-icons/ri";
+import { useTranslation } from "react-i18next";
+import MerchantCardSkeleton from "./MerchantCardSkeleton"; // Import Skeleton
+
+// Hook Debounce
+const useDebounce = (value, delay) => {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+    useEffect(() => {
+        const handler = setTimeout(() => setDebouncedValue(value), delay);
+        return () => clearTimeout(handler);
+    }, [value, delay]);
+    return debouncedValue;
+};
 
 const Merchant = () => {
+    const { t, i18n } = useTranslation();
+    const navigate = useNavigate();
     const [merchants, setMerchants] = useState([]);
     const [meta, setMeta] = useState({});
     const [page, setPage] = useState(1);
+    const [loading, setLoading] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
+
+    const [cities, setCities] = useState([]);
+    const [selectedCity, setSelectedCity] = useState(null);
+
+    // Search State
     const [search, setSearch] = useState("");
+    const debouncedSearch = useDebounce(search, 500);
 
+    // Fetch Cities
+    useEffect(() => {
+        Api.get('/cities')
+            .then(res => {
+                if(res.data.success) {
+                    setCities(res.data.data);
+                }
+            })
+            .catch(err => console.error("Error fetching cities:", err));
+    }, []);
 
-    const fetchMerchants = async (page = 1, search = "") => {
+    const fetchMerchants = async (pageNumber, searchQuery, reset = false) => {
+        // If we are loading and it's not a reset (new search), prevent duplicate
+        if (loading && !reset) return;
+        // If no more data and it's not a reset, stop
+        if (!hasMore && !reset) return;
+
         try {
-            const params = { page };
-            if (search) params.search = search;
+            setLoading(true);
+
+            // Params
+            const params = { page: pageNumber };
+            if (searchQuery) params.search = searchQuery;
+            if (selectedCity) params.city_id = selectedCity;
 
             const res = await Api.get("/merchants", { params });
 
             if (res.data.success) {
-                setMerchants(res.data.data.data);
-                setMeta(res.data.data.meta);
-            } else {
-                setMerchants([]);
-                setMeta({});
+                const newMerchants = res.data.data.data;
+                const metaData = res.data.data.meta;
+
+                setMerchants(prev => {
+                    if (reset) return newMerchants;
+                    
+                    const uniqueNewMerchants = newMerchants.filter(
+                        nm => !prev.some(pm => pm.id === nm.id)
+                    );
+                    return [...prev, ...uniqueNewMerchants];
+                });
+                
+                setMeta(metaData);
+
+                if (metaData.current_page >= metaData.last_page) {
+                    setHasMore(false);
+                } else {
+                    setHasMore(true);
+                }
             }
         } catch (error) {
-            console.error("Error fetching merchants:", error.response?.data || error.message);
+            console.error("Error fetching merchants:", error);
+        } finally {
+            setLoading(false);
         }
     };
 
+    // When search or city changes, reset and fetch
     useEffect(() => {
-        fetchMerchants(page, search);
-    }, [page, search]);
+        setPage(1);
+        setHasMore(true);
+        fetchMerchants(1, debouncedSearch, true);
+    }, [debouncedSearch, selectedCity]);
+
+
+    // Infinite Scroll
+    useEffect(() => {
+        const handleScroll = () => {
+            if (
+                window.innerHeight + window.scrollY >= document.body.offsetHeight - 200 &&
+                hasMore &&
+                !loading
+            ) {
+                setPage(prev => prev + 1);
+            }
+        };
+
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, [hasMore, loading]);
+
+    // Load next page
+    useEffect(() => {
+        if (page > 1) {
+            fetchMerchants(page, debouncedSearch, false);
+        }
+    }, [page]);
 
     return (
         <div className="merchant-page">
-            <div className="merchant-page-app">
-                <header>
-                    <h4><FaBuildingUser /> التجـار {meta.total || 0}</h4>
-                </header>
+            
+            {/* Header like Product Details */}
+            <header className="merchant-header-page">
+                <div onClick={() => navigate(-1)} className="icon-back">
+                    <RiArrowRightLine />
+                </div>
+                <h6>{t("merchants", "المتاجر")}</h6>
+            </header>
 
-                {/* حقل البحث */}
-                <div className="search-bar">
-                    <input
-                        type="text"
-                        className="search-merchant"
-                        placeholder="ابحث عن تاجر..."
+            <div className="merchant-page-app">
+                
+                {/* Cities Tabs */}
+                <div className="merchant-cities-tabs">
+                    <div 
+                        className={`city-tab ${selectedCity === null ? 'active' : ''}`}
+                        onClick={() => setSelectedCity(null)}
+                    >
+                        {t("all", "الكل")}
+                    </div>
+                    {cities.map(city => (
+                        <div 
+                            key={city.id}
+                            className={`city-tab ${selectedCity === city.id ? 'active' : ''}`}
+                            onClick={() => setSelectedCity(city.id)}
+                        >
+                            {i18n.language === 'en' ? city.name_en : city.name_ar}
+                        </div>
+                    ))}
+                </div>
+
+                {/* Search Bar */}
+                <div className="search-container-merchant">
+                    <input 
+                        type="text" 
+                        placeholder={t("search_merchant", "ابحث عن اسم المتجر...")}
                         value={search}
-                        onChange={(e) => {
-                            setPage(1); // العودة للصفحة 1 عند البحث
-                            setSearch(e.target.value);
-                        }}
+                        onChange={(e) => setSearch(e.target.value)}
                     />
+                    <RiSearchLine className="search-icon" />
                 </div>
 
                 <div className="items">
-                    {merchants.length > 0 ? (
-                        merchants.map((merchant) => (
-                            <div className="item" key={merchant.id}>
-                                <div className="image">
-                                    <img
-                                        src={merchant.image_vendor || imgPlaceholder}
-                                        alt={merchant.name}
-                                    />
-                                </div>
-                                <Link to={`/merchants/${merchant.slug}`}>
-                                    {merchant.name_vendor || merchant.name}
-                                </Link>
+                    {merchants.length > 0 && merchants.map((merchant) => (
+                        <div className="item" key={merchant.id}>
+                            <Link to={`/merchants/${merchant.id}`} className="image">
+                                <img
+                                    src={merchant.image_vendor || imgPlaceholder}
+                                    alt={merchant.name}
+                                />
+                            </Link>
+                            <Link to={`/merchants/${merchant.id}`}>
+                                {merchant.name_vendor || merchant.name}
+                            </Link>
+                        </div>
+                    ))}
 
-                                {/* <p>{merchant.phone_vendor || merchant.phone}</p> */}
+                    {/* Show Skeletons when loading */}
+                    {loading && Array.from({ length: 4 }).map((_, idx) => (
+                        <MerchantCardSkeleton key={`skeleton-${idx}`} />
+                    ))}
+
+                    {/* Only show "No merchants" if NOT loading and list is empty */}
+                    {!loading && merchants.length === 0 && (
+                        <div className="no-merchants-found">
+                            <div className="icon-wrapper">
+                                <RiStore3Line />
                             </div>
-                        ))
-                    ) : (
-                        <p>لا يوجد تجار مطابقون للبحث.</p>
+                            <h3>{t("no_merchants_found", "لا يوجد تجار")}</h3>
+                            <p>{t("try_another_search", "لم نعثر على أي متاجر تطابق بحثك الحالي، جرب تغيير المدينة أو كلمات البحث.")}</p>
+                        </div>
                     )}
                 </div>
 
-                {/* Pagination */}
-                <div className="pagination">
-                    {meta.prev_page_url && (
-                        <button className="btn btn-dark rounded-0" onClick={() => setPage(page - 1)}>السابق</button>
-                    )}
-                    <span>صفحة {meta.current_page || 0} من {meta.last_page || 0}</span>
-                    {meta.next_page_url && (
-                        <button className="btn btn-dark rounded-0" onClick={() => setPage(page + 1)}>التالي</button>
-                    )}
-                </div>
+                {!loading && !hasMore && merchants.length > 0 && (
+                    <p style={{ textAlign: "center", marginTop: "15px" }}>
+                        لا يوجد المزيد من التجار
+                    </p>
+                )}
             </div>
         </div>
     );

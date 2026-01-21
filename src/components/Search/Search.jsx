@@ -3,6 +3,7 @@ import { IoLocationOutline } from "react-icons/io5";
 import { IoIosSearch } from "react-icons/io";
 import { useTranslation } from "react-i18next";
 import "./Search.css";
+import "../Spinner.css"; // Import mini-spinner styles
 import Api from "../../Services/Api";
 
 const Search = ({ merchantSlug }) => {
@@ -15,9 +16,7 @@ const Search = ({ merchantSlug }) => {
 
   // 🔹 debounce 500ms
   useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedQuery(query);
-    }, 500);
+    const handler = setTimeout(() => setDebouncedQuery(query), 500);
     return () => clearTimeout(handler);
   }, [query]);
 
@@ -25,36 +24,40 @@ const Search = ({ merchantSlug }) => {
   useEffect(() => {
     if (!debouncedQuery) {
       setResults([]);
+      setLoading(false);
       return;
     }
 
+    let isMounted = true;
     const fetchProducts = async () => {
-      setLoading(true);
+      // نأجل ظهور loading لمدة 300ms
+      const loadingTimer = setTimeout(() => isMounted && setLoading(true), 300);
+
       try {
         const params = { q: debouncedQuery, per_page: 5 };
-        let endpoint = "/user/products/search";
+        let endpoint = "/products/search";
+        if (merchantSlug) endpoint = `/merchants/${merchantSlug}/products`;
 
-        if (merchantSlug) {
-          endpoint = `/user/merchants/${merchantSlug}/products`;
-        }
+        // Pass skipLoader: true to avoid global spinner
+        const res = await Api.get(endpoint, { params, skipLoader: true });
 
-        const res = await Api.get(endpoint, { params });
-
-        if (res.data.success) {
-          // يدعم كل المنتجات أو منتجات التاجر فقط
+        if (res.data.success && isMounted) {
           setResults(res.data.data.data || res.data.data);
-        } else {
-          setResults([]);
         }
       } catch (err) {
+        if (isMounted) setResults([]);
         console.error("Error fetching products:", err.response?.data || err.message);
-        setResults([]);
       } finally {
-        setLoading(false);
+        clearTimeout(loadingTimer);
+        if (isMounted) setLoading(false);
       }
     };
 
     fetchProducts();
+
+    return () => {
+      isMounted = false;
+    };
   }, [debouncedQuery, merchantSlug]);
 
   return (
@@ -62,7 +65,7 @@ const Search = ({ merchantSlug }) => {
       <div className="container">
         <div className="app-search">
           <a href="#" className="location-dot">
-            <IoLocationOutline   />
+            <IoLocationOutline />
           </a>
           <form
             action="#"
@@ -79,12 +82,10 @@ const Search = ({ merchantSlug }) => {
                 setShowDropdown(true);
               }}
               onFocus={() => setShowDropdown(true)}
-              onBlur={() =>
-                setTimeout(() => setShowDropdown(false), 200)
-              }
+              onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
             />
             <button type="submit">
-              <IoIosSearch  />
+              <IoIosSearch />
             </button>
 
             {/* ===== Dropdown النتائج ===== */}
@@ -103,9 +104,13 @@ const Search = ({ merchantSlug }) => {
                   overflowY: "auto",
                 }}
               >
-                {loading && <p className="p-2">جاري التحميل...</p>}
+                {loading && (
+                  <p className="p-2 text-center">
+                    <span className="mini-spinner"></span> جاري التحميل...
+                  </p>
+                )}
                 {!loading && results.length === 0 && (
-                  <p className="p-2">لا توجد نتائج</p>
+                  <p className="p-2 text-center">لا توجد نتائج</p>
                 )}
                 {!loading &&
                   results.map((product) => (
@@ -117,9 +122,15 @@ const Search = ({ merchantSlug }) => {
                         cursor: "pointer",
                       }}
                       onMouseDown={() => {
-                        window.location.href = `/product/${product.slug}`;
+                        window.location.href = `/product/${product.id}/${product.slug}`;
                       }}
                     >
+                      <img
+                        src={product.image}
+                        alt=""
+                        width={20}
+                        style={{ borderRadius: 5, marginRight: 5 }}
+                      />
                       {product.name}
                     </div>
                   ))}

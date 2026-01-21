@@ -1,0 +1,94 @@
+
+.banner-click-area {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end; /* Text and image push to the right side if needed, or center */
+  width: 100%;
+  text-decoration: none;
+  gap: 15px;
+  flex: 1;
+      flex-direction: row-reverse;
+}
+
+.banner-icon-img {
+width: 50px;
+    height: 50px;
+  object-fit: contain;
+  border-radius: 8px; /* Optional, for app icon look */
+  background-color: #ccc; /* Placeholder color so user sees where image goes */
+}
+
+/* Override AppBanner.css generic styles if needed */
+.app-banner .banner-content {
+  justify-content: space-between; /* Spread close button and content */
+}
+
+/* Ensure close button is on the left (ltr) or right (rtl) correctly */
+/* Assuming RTL based on Arabic text */
+/* If default is RTL: close button on left, content on right. */
+/* If content order in DOM is Close - Text/Img, flex direction row with RTL will put Close on Right? No. */
+/* In RTL, elements start from Right..banner-click-area
+ So 1st element (Close) is on Right. */
+/* Image shows Close on Left. */
+/* So in RTL, we might need Close to be the LAST element or use order, or absolute positioning. */
+/* Actually, the previous implementation used absolute positioning for Close on Left. */
+/* Let's stick to flex but check positioning. */
+
+.app-banner .close-banner {
+  position: static; /* Remove absolute */
+  order: 1; /* Move to end visually if LTR, or start if RTL? */
+  /* Wait, user wants Close on Left. In RTL, Left is the end. */
+  /* So Close should be the last flex item, OR simply flex-row-reverse? */
+  /* Let's use simpler margin-right auto if RTL? */
+  /* Let's stick to `justify-content: space-between` and DOM order. */
+}
+
+/* In RTL:
+   <div content> (Right)
+   <div close> (Left)
+   
+   If DOM is: Close, Content.
+   RTL Flow: Close (Right) -> Content (Left).
+   This is opposite of what we want (Close on Left).
+   
+   So in RTL, if we want Close on Left, it should be the SECOND element or use `margin-left: auto`? No, `margin-right: auto` pushes it to left?
+   Wait, RTL origin is Right.
+   Item 1 (Right), Item 2 (Left of Item 1).
+   
+   If we want Close on Left, it essentially needs to be the last item in the row visually.
+   So in DOM it should be the second item?
+   
+   Let's see modification in Header.jsx:
+   Close is FIRST in DOM.
+   
+   RTL: Close starts at Right.
+   This is wrong if we want Close at Left.
+   
+   So I should probably keep Close as absolute or change DOM order.
+   But AppBanner.css had:
+   .app-banner .close-banner { position: absolute; left: 0; }
+   
+   This works perfectly for RTL (Left is far side) and LTR (Left is near side).
+   The user code `[dir="ltr"] .app-banner .close-banner { right: 0; left: auto; }` was present.
+   
+   I'll revert close banner to absolute in CSS or keep it static?
+   The user asked for "same formatting". The screenshot shows a layout where the close button is integrated.
+   Usually absolute is safest for "floaty" close buttons.
+   
+   I will modify AppBanner.css to ensure layout is correct for the new DOM structure if I make it flex.
+   But I replaced the content.
+   
+   Let's look at `Header.jsx` replacement again.
+   I put `close-banner` *inside* `banner-content`.
+   Previous CSS: `.app-banner .close-banner { position: absolute; ... }`
+   This is fine, it will stay absolute relative to `banner-content` (which needs `position: relative`).
+   
+   The `banner-click-area` will take up the space.
+   
+   I need to style `banner-click-area` to center the text and image.
+*/
+
+.banner-text {
+  color: #000; /* Or whatever text color matches screenshot */
+  font-size: 16px;
+}

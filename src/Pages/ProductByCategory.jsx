@@ -1,180 +1,168 @@
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { RiArrowRightLine } from "react-icons/ri";
 import { useEffect, useState } from "react";
 import ProductCard from '../components/CategorySection/ProductCard';
+import ProductCardSkeleton from '../components/CategorySection/ProductCardSkeleton';
 import "./ProductByCategory.css";
 import Api from '../Services/Api';
 
-const ProductByCategory = () => {
+const ProductByCategory = ({ isInstallment = false }) => {
     const { slug } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
-
-    const isInstallmentsPage = location.pathname.startsWith('/installments');
+    const subSlug = new URLSearchParams(location.search).get('sub');
 
     const [category, setCategory] = useState(null);
     const [products, setProducts] = useState([]);
-    const [productsLoading, setProductsLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [priceFilter, setPriceFilter] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [lastPage, setLastPage] = useState(1);
+    const [categories, setCategories] = useState([]);
 
-    // إعادة تعيين الصفحة عند تغيير القسم أو البحث أو الفلتر
+    const pathname = window.location.pathname;
+    const isAllProducts = slug === 'all' || pathname === '/products';
+
     useEffect(() => {
+        setProducts([]);
         setCurrentPage(1);
-    }, [slug, searchTerm, priceFilter, isInstallmentsPage]);
+    }, [slug, pathname, location.search]);
 
     // جلب البيانات
-    useEffect(() => {
-        fetchData(currentPage);
-    }, [slug, currentPage, searchTerm, priceFilter, isInstallmentsPage]);
+    useEffect(() => { fetchProducts(currentPage); }, [currentPage, slug, pathname, location.search, isInstallment]);
 
-    const fetchData = async (page = 1) => {
+    useEffect(() => { fetchCategories(); }, []);
+
+    const fetchCategories = async () => {
         try {
-            setProductsLoading(true);
+            const res = await Api.get("/categories");
+            setCategories(res.data.data);
+        } catch (err) { console.error(err); }
+    };
 
-            let url = "";
 
-            if (isInstallmentsPage) {
-                url = slug
-                    ? `/products/installments/${slug}?page=${page}&search=${searchTerm}`
-                    : `/products/installments?page=${page}&search=${searchTerm}`;
+    const fetchProducts = async (page) => {
+        if (loading && page > 1) return;
+        try {
+            setLoading(true);
+            let url = '';
+
+            if (isInstallment) {
+                url = `/categories/products/active/${slug || ''}?page=${page}`;
+                if (subSlug) url += `&sub=${subSlug}`;
+            } else if (isAllProducts) {
+                url = `/categories/products?page=${page}`;
             } else {
-                url = `/categories/products/${slug}?page=${page}&search=${searchTerm}${priceFilter ? '&price_active=1' : ''}`;
+                url = `/categories/products/${slug}?page=${page}`;
+                if (subSlug) url += `&sub=${subSlug}`;
             }
 
             const res = await Api.get(url);
-            const { category, products, meta } = res.data.data;
+            const { category: catData, products: newProducts, meta } = res.data.data;
 
-            setCategory(category);
-            setProducts(products);
+            // ضبط العنوان
+            if (isInstallment) setCategory({ name: 'الأقساط', subcategories: catData?.subcategories || [] });
+            else if (!isAllProducts) setCategory(catData);
+            else setCategory({ name: 'كل المنتجات' });
+
             setLastPage(meta.last_page);
-        } catch (error) {
-            console.error(error);
-            setProducts([]);
-            setLastPage(1);
-        } finally {
-            setProductsLoading(false);
-        }
+
+            setProducts(prev => {
+                //If page 1, reset completely to avoid mixing old data if state wasn't cleared fast enough
+                if (page === 1) return newProducts;
+                
+                const productMap = new Map(prev.map(p => [p.id, p]));
+                newProducts.forEach(p => productMap.set(p.id, p));
+                return Array.from(productMap.values());
+            });
+        } catch (err) { console.error(err); }
+        finally { setLoading(false); }
     };
-    if (slug && !category && !productsLoading) {
-        return (
-            <p className="text-center mt-5">
-                لا يوجد قسم بهذا الاسم
-            </p>
-        );
+
+    // Infinite scroll
+    useEffect(() => {
+        const handleScroll = () => {
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 200 &&
+                !loading && currentPage < lastPage) {
+                setCurrentPage(prev => prev + 1);
+            }
+        };
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, [loading, currentPage, lastPage]);
+
+    if (!isAllProducts && slug && !category && !loading) {
+        return <p className="text-center mt-5">لا يوجد قسم بهذا الاسم</p>;
     }
+
+    const showAllActive = !subSlug && (!slug || isInstallment);
+
     return (
         <div className="PageProductByCategory">
+            {!isInstallment && (
+                <div className="title container-fluid">
+                    <Link className="back" to="/">
+                        <RiArrowRightLine />
+                    </Link>
+                    <h4>{category?.name}</h4>
+                </div>
+            )}
 
-            {/* العنوان */}
-            <div className="title">
-                <span
-                    className="back"
-                    onClick={() => navigate(-1)}
-                    style={{ cursor: "pointer" }}
-                >
-                    <RiArrowRightLine />
-                </span>
-                <h4>{category?.name || "منتجات التقسيط"}</h4>
-            </div>
 
-            {/* Sub Categories */}
-            {category?.subcategories?.length > 0 && (
-                <div className="subcategory">
-                    <span
-                        className={!slug ? "active" : ""}
-                        onClick={() =>
-                            navigate(isInstallmentsPage ? "/installments" : `/category/${category.slug}`)
-                        }
-                    >
-                        الكل
-                    </span>
-
-                    {category.subcategories.map(sub => (
-                        <span
-                            key={sub.id}
-                            onClick={() =>
-                                navigate(
-                                    isInstallmentsPage
-                                        ? `/installments/${sub.slug}`
-                                        : `/category/${sub.slug}`
-                                )
-                            }
-                            style={{ cursor: "pointer" }}
-                        >
-                            {sub.name}
-                        </span>
+            {/* الأقسام الرئيسية */}
+            <div className="categories-tabs">
+                <div className="categories-tabs-child">
+                    <Link
+                        className={`category-tab ${isAllProducts ? 'active' : ''}`}
+                        to={isInstallment ? '/category/installments' : '/products'}
+                    >الكل</Link>
+                    {categories.map(cat => (
+                        <Link
+                            key={cat.id}
+                            className={`category-tab ${cat.slug === slug ? "active" : ""}`}
+                            to={isInstallment ? `/category/installments/${cat.slug}` : `/category/${cat.slug}`}
+                        >{cat.name}</Link>
                     ))}
                 </div>
-            )}
+            </div>
 
-            {/* فلتر القسط (يظهر فقط في صفحة الأقسام) */}
-            {!isInstallmentsPage && (
-                <div className="mb-3 text-center my-4">
-                    <label className="switch">
-                        <input
-                            type="checkbox"
-                            checked={priceFilter}
-                            onChange={() => setPriceFilter(prev => !prev)}
-                        />
-                        <span className="slider round"></span>
-                    </label>
-                    <span style={{ marginLeft: '10px' }}>
-                        عرض المنتجات بالقسط فقط
-                    </span>
+            {/* الأقسام الفرعية */}
+            {category?.subcategories?.length > 0 && (
+                <div className="subcategories-tabs">
+                    <div className="subcategories-tabs-child">
+                        <Link
+                            className={`subcategory-tab ${!subSlug ? 'active' : ''}`}
+                            to={isInstallment ? `/category/installments/${slug || ''}` : `/category/${slug}`}
+                        >الكل</Link>
+                        {category.subcategories.map(sub => (
+                            <Link
+                                key={sub.id}
+                                className={`subcategory-tab ${String(sub.slug) === String(subSlug) ? "active" : ""}`}
+                                to={isInstallment ? `/category/installments/${slug}?sub=${sub.slug}` : `/category/${slug}?sub=${sub.slug}`}
+                            >{sub.name}</Link>
+                        ))}
+                    </div>
                 </div>
             )}
 
-            {/* Search */}
-            <div className="search-box mt-3 mb-3">
-                <input
-                    type="text"
-                    placeholder="ابحث عن منتج..."
-                    value={searchTerm}
-                    onChange={e => setSearchTerm(e.target.value)}
-                    className="form-control"
-                />
-            </div>
-
-            {/* Products */}
+            {/* المنتجات */}
             <div className="products-row">
                 <div className="products-grid">
-                    {productsLoading ? (
-                        <p>جاري تحميل المنتجات...</p>
-                    ) : products.length === 0 ? (
-                        <p>لا توجد منتجات</p>
-                    ) : (
-                        products.map(product => (
-                            <ProductCard key={product.id} p={product} />
-                        ))
-                    )}
+                    {products.map(product => (
+                        <ProductCard key={product.id} p={product} />
+                    ))}
+                    
+                    {/* عرض Skeletons أثناء التحميل */}
+                    {loading && Array.from({ length: 4 }).map((_, idx) => (
+                        <ProductCardSkeleton key={`skeleton-${idx}`} />
+                    ))}
                 </div>
 
-                {/* Pagination */}
-                {!productsLoading && products.length > 0 && (
-                    <div className="pagination mt-4 d-flex justify-content-center align-items-center gap-3">
-                        <button
-                            className="btn btn-dark rounded-0"
-                            disabled={currentPage === 1}
-                            onClick={() => setCurrentPage(prev => prev - 1)}
-                        >
-                            السابق
-                        </button>
-
-                        <span>{currentPage} / {lastPage}</span>
-
-                        <button
-                            className="btn btn-dark rounded-0"
-                            disabled={currentPage === lastPage}
-                            onClick={() => setCurrentPage(prev => prev + 1)}
-                        >
-                            التالي
-                        </button>
+                {!loading && products.length === 0 && (
+                    <div className="text-center mt-5 w-100">
+                        <p className="text-muted">لا يوجد بيانات في الوقت الحالي</p>
                     </div>
                 )}
-            </div>
+            </div>        
         </div>
     );
 };

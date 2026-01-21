@@ -1,11 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import './Category.css'
 import { useNavigate } from 'react-router-dom';
-
-
 import Api from "../../Services/Api"; // axios instance
-
-
+import LazyImage from '../LazyImage/LazyImage';
 
 const Category = () => {
     const [categories, setCategories] = useState([]);
@@ -13,8 +10,7 @@ const Category = () => {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const res = await Api.get("/categories"); 
-                console.log(res);
+                const res = await Api.get("/categories", { cache: true }); 
                 if (res.data.success) {
                     setCategories(res.data.data);
                 }
@@ -38,7 +34,11 @@ const Category = () => {
                         key={cat.id}
                     >
                         <div className="image">
-                            <img src={cat.image} alt={cat.name} />
+                            <LazyImage 
+                                src={cat.image} 
+                                alt={cat.name} 
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
                         </div>
                         <p>{cat.name}</p>
                     </div>
@@ -49,4 +49,4 @@ const Category = () => {
 
 }
 
-export default Category
+export default React.memo(Category);

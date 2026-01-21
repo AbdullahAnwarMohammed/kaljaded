@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { AiFillTikTok } from "react-icons/ai";
-import { FaSquareInstagram } from "react-icons/fa6";
+import { FaTiktok } from "react-icons/fa6";
+import { IoLogoInstagram } from "react-icons/io";
 import { AiOutlineLike } from "react-icons/ai";
 import { SiWhatsapp } from "react-icons/si";
 import { useTranslation } from "react-i18next";
@@ -24,26 +24,30 @@ const Welcome = () => {
         <div className="component-welcome">
             <div className="container">
                 <h4>
-                    {t("welcome_message")} <AiOutlineLike /> <SiWhatsapp />
+                    {t("welcome_message")} <AiOutlineLike /> 
+                      <a href="https://wa.me/96567691171" target="_blank" rel="noopener noreferrer">
+                        <SiWhatsapp />
+                    </a>
                 </h4>
                 <p>{t("social_accounts")}</p>
 
                 <div className='social'>
-                    {socials.tiktok && (
-                        <a href={socials.tiktok} target="_blank" rel="noopener noreferrer">
-                            <AiFillTikTok />
-                        </a>
-                    )}
                     {socials.instgram && (
                         <a href={socials.instgram} target="_blank" rel="noopener noreferrer">
-                            <FaSquareInstagram />
+                            <IoLogoInstagram />
                         </a>
                     )}
-                    {socials.whatsapp && (
+                    {socials.tiktok && (
+                        <a href={socials.tiktok} target="_blank" rel="noopener noreferrer">
+                            <FaTiktok />
+                        </a>
+                    )}
+
+                    {/* {socials.whatsapp && (
                         <a href={`https://wa.me/${socials.whatsapp.replace("+", "")}`} target="_blank" rel="noopener noreferrer">
                             <SiWhatsapp />
                         </a>
-                    )}
+                    )} */}
                 </div>
             </div>
         </div>

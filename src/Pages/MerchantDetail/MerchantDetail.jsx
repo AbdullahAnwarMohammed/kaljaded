@@ -1,9 +1,14 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import "./MerchantDetail.css";
 import imagePlaceholder from "../../assets/merchmant.jpg";
 import ProductCard from "../../components/CategorySection/ProductCard";
 import Api from "../../Services/Api";
+import { RiArrowRightLine, RiSearchLine } from "react-icons/ri";
+import { FaWhatsapp } from "react-icons/fa";
+import { FaPhoneAlt } from "react-icons/fa";
+import { FaStar } from "react-icons/fa";
+import { TbMoodEmpty } from "react-icons/tb";
 
 // دالة بسيطة للـ debounce
 const useDebounce = (value, delay) => {
@@ -16,8 +21,8 @@ const useDebounce = (value, delay) => {
 };
 
 const MerchantDetail = () => {
-    const { slug } = useParams();
-
+    const { id } = useParams();
+    console.log(id);
     // بيانات التاجر
     const [merchant, setMerchant] = useState(null);
 
@@ -30,11 +35,10 @@ const MerchantDetail = () => {
 
     const debouncedSearch = useDebounce(search, 500); // تأخير 500ms قبل البحث
 
-    // جلب بيانات التاجر مرة واحدة عند تغير slug
     useEffect(() => {
         const fetchMerchant = async () => {
             try {
-                const res = await Api.get(`/user/merchants/${slug}`);
+                const res = await Api.get(`/merchants/${id}`);
                 if (res.data.success) {
                     setMerchant(res.data.data);
                 }
@@ -43,7 +47,7 @@ const MerchantDetail = () => {
             }
         };
         fetchMerchant();
-    }, [slug]);
+    }, [id]);
 
     // جلب المنتجات عند تغير الصفحة أو البحث
     useEffect(() => {
@@ -51,7 +55,7 @@ const MerchantDetail = () => {
             setLoadingProducts(true);
             try {
                 const params = { per_page: 12, page, q: debouncedSearch };
-                const res = await Api.get(`/user/merchants/${slug}/products`, { params });
+                const res = await Api.get(`/merchants/${id}/products`, { params });
 
                 if (res.data.success) {
                     setProducts(res.data.data.data);
@@ -69,52 +73,79 @@ const MerchantDetail = () => {
             }
         };
         fetchProducts();
-    }, [slug, page, debouncedSearch]);
+    }, [id, page, debouncedSearch]);
 
 
     if (!merchant) return <p>التاجر غير موجود</p>;
 
     return (
         <div className="merchant-details-page">
+            <div className="top-header">
+                <Link to="/merchants" className="icon-back">
+                    <RiArrowRightLine />
+                </Link>
+                <h6>{merchant.name_vendor || merchant.name}</h6>
+            </div>
             {/* ===== Header ===== */}
             <header className="merchant-header">
                 <div className="merchant-image">
                     <img src={merchant.image_vendor || imagePlaceholder} alt={merchant.name} />
                 </div>
-                <div className="merchant-info">
-                    <h4 className="merchant-name">{merchant.name_vendor || merchant.name}</h4>
-                    <div className="merchant-meta">
-                        <div className="meta-item">
-                            <span className="meta-label">عدد المنتجات:</span>
-                            <span className="meta-value">{meta.total || 0}</span>
+
+                <div className="info">
+                    <div className="left">
+
+                        <a href={`tel:${merchant.phone_vendor || merchant.phone}`} className="phone-icon">
+                            <FaPhoneAlt />
+                        </a>
+
+                        <a 
+                            href={`https://wa.me/${merchant.phone_vendor || merchant.phone}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="whatsapp-icon"
+                        >
+                            <FaWhatsapp />
+                        </a>
+                    </div>
+
+                    <div className="right">
+                        <div className="icon">
+                            <small>{merchant.rating ?? 0}</small><FaStar />
                         </div>
-                        <div className="meta-item">
-                            <span className="meta-label">رقم الهاتف:</span>
-                            <span className="meta-value">{merchant.phone_vendor || merchant.phone}</span>
-                        </div>
-                        {merchant.address && (
-                            <div className="meta-item">
-                                <span className="meta-label">العنوان:</span>
-                                <span className="meta-value">{merchant.address}</span>
-                            </div>
-                        )}
                     </div>
                 </div>
             </header>
 
             {/* ===== Search ===== */}
-            <div className="merchant-search my-3">
-                <input
-                    type="text"
-                    className="form-control"
-                    placeholder="ابحث عن منتج..."
-                    value={search}
-                    onChange={(e) => {
-                        setPage(1);
-                        setSearch(e.target.value);
-                    }}
-                />
+            <div className="search-container" style={{ padding: "0 13px", marginTop: "15px" }}>
+                <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                    <input
+                        type="text"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="ابحث في منتجات التاجر..."
+                        style={{
+                            width: "100%",
+                            padding: "12px 15px",
+                            paddingRight: "40px", 
+                            borderRadius: "10px",
+                            border: "1px solid #ddd",
+                            outline: "none",
+                            fontSize: "0.95rem"
+                        }}
+                    />
+                    <RiSearchLine style={{
+                        position: "absolute",
+                        right: "12px",
+                        color: "#888",
+                        fontSize: "1.2rem"
+                    }} />
+                </div>
             </div>
+
+
+
 
             {/* ===== Products ===== */}
             <div className="merchant-products-section">
@@ -122,30 +153,13 @@ const MerchantDetail = () => {
                     {loadingProducts ? (
                         <p>جاري تحميل المنتجات...</p>
                     ) : products.length > 0 ? (
-                        products.map((product) => <ProductCard key={product.id} p={product} />)
+                        <div className="products-grid">
+                            {products.map((product) => <ProductCard key={product.id} p={product} showFastBadge={true} />)}
+                        </div>
                     ) : (
-                        <p>لا توجد منتجات لهذا التاجر</p>
+                        <p className="empty-products">لا توجد منتجات لهذا التاجر  <TbMoodEmpty /></p>
                     )}
                 </div>
-
-                {/* ===== Pagination ===== */}
-                {meta.total > 0 && !loadingProducts && (
-                    <div className="pagination my-3">
-                        {meta.prev_page_url && (
-                            <button className="btn btn-dark rounded-0 me-2" onClick={() => setPage(page - 1)}>
-                                السابق
-                            </button>
-                        )}
-                        <span>
-                            صفحة {meta.current_page} من {meta.last_page}
-                        </span>
-                        {meta.next_page_url && (
-                            <button className="btn btn-dark rounded-0 ms-2" onClick={() => setPage(page + 1)}>
-                                التالي
-                            </button>
-                        )}
-                    </div>
-                )}
             </div>
         </div>
     );

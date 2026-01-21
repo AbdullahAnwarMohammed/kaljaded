@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Slider from "react-slick";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import Api from "../../Services/Api"; // axios instance
+import LazyImage from "../LazyImage/LazyImage"; // Import LazyImage
 
 import "./ImageSlider.css";
 import "slick-carousel/slick/slick.css";
@@ -16,7 +17,7 @@ const ImageSlider = () => {
     useEffect(() => {
         const fetchBanners = async () => {
             try {
-                const res = await Api.get("/banners");
+                const res = await Api.get("/banners", { cache: true });
                 if (res.data.success) {
                     setBanners(res.data.data);
                 }
@@ -47,12 +48,13 @@ const ImageSlider = () => {
         <>
             <div className="image-slider" style={{ width: "100%", margin: "auto" }}>
                 <Slider {...settings}>
-                    {banners.map((item) => (
+                    {banners.map((item, index) => (
                         <div key={item.id} className="app-image-slider" style={{ position: "relative" }}>
-                            <img
+                            <LazyImage
                                 src={item.image}
                                 alt={item.title}
-
+                                className="slider-image" // Add a class for specific slider styling if needed
+                                style={{ width: '100%', height: '100%' }}
                             />
                             <div
                             >
@@ -86,4 +88,4 @@ const ImageSlider = () => {
     );
 };
 
-export default ImageSlider;
+export default React.memo(ImageSlider);

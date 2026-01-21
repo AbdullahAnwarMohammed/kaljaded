@@ -1,0 +1,130 @@
+.app-banner {
+  padding: 10px 0;
+  border-bottom: 1px solid #000;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 10001;
+  /* Higher than header and overlays */
+  height: 82px;
+  display: flex;
+  align-items: center;
+  opacity: 1;
+  /* Default visible, animations handle entry/exit */
+
+
+  border-radius: 20px;
+  width: 98%;
+  margin: 0 2px;
+  background: #000;
+  color: #fff;
+}
+
+.app-banner.opening {
+  animation: slideDown 0.6s ease-out forwards;
+}
+
+@keyframes slideDown {
+  0% {
+    top: -150px;
+    opacity: 0;
+  }
+
+  100% {
+    top: 3px;
+    opacity: 1;
+  }
+}
+
+.app-banner.closing {
+  animation: slideUp 0.6s ease-in-out forwards;
+}
+
+@keyframes slideUp {
+  0% {
+    top: 0;
+    opacity: 1;
+  }
+
+  100% {
+    top: -150px;
+    opacity: 0;
+  }
+}
+
+.app-banner .banner-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  position: relative;
+}
+
+.app-banner .banner-click-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.app-banner .banner-text-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.app-banner .banner-small-title {
+  font-size: 13px;
+  color: #fff;
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+.store-blue {
+  color: #2196F3 !important;
+}
+
+.play-green {
+  color: #4CAF50 !important;
+}
+
+.app-banner .banner-text {
+  font-weight: bold;
+  color: #fff;
+  font-size: 14px;
+}
+
+.app-banner .close-banner {
+  position: absolute;
+  left: 0;
+  /* Position X on the left for RTL, or right depending on layout direction. Assuming RTL based on content */
+  cursor: pointer;
+  font-size: 27px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  z-index: 10002;
+}
+
+/* Adjust for LTR if needed, but the site seems to have Arabic focus */
+[dir="ltr"] .app-banner .close-banner {
+  right: 0;
+  left: auto;
+}
+
+@media (max-width: 576px) {
+  .app-banner .banner-content {
+    flex-direction: row;
+    gap: 10px;
+    font-size: 12px;
+    justify-content: center;
+    /* Ensure centering */
+  }
+
+  .app-banner .banner-text {
+    font-size: 12px;
+  }
+
+  /* Keep default absolute positioning for close button even on mobile for consistency */
+}

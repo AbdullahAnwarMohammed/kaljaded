@@ -10,3 +10,7 @@ export function getGuestToken() {
     }
     return token;
 }
+
+export function removeGuestToken() {
+    localStorage.removeItem(GUEST_KEY);
+}

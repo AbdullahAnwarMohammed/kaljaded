@@ -1,13 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Helmet } from "react-helmet";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { RiArrowRightLine, RiSecurePaymentLine } from "react-icons/ri";
-import { FaRegEye, FaCommentAlt, FaShareAltSquare, FaWhatsappSquare, FaArrowLeft, FaWindowClose, FaCalendarAlt, FaStar, FaCog, FaArrowCircleLeft } from "react-icons/fa";
+import { FaRegEye, FaCommentAlt, FaArrowLeft, FaWindowClose, FaCalendarAlt, FaStar, FaCog, FaArrowCircleLeft } from "react-icons/fa";
 import { IoCheckmarkDoneCircle } from "react-icons/io5";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
-import { MdLocalShipping } from "react-icons/md";
-import { IoMdClock } from "react-icons/io";
-import { SiMoneygram } from "react-icons/si";
+
+import { FaTiktok, FaWhatsapp } from "react-icons/fa6";
+import { MdOutlineIosShare } from "react-icons/md";
+
+import shipping from "../../src/assets/shipping.png";
+import return_image from "../../src/assets/return.png";
+import hourse from "../../src/assets/hourse.png";
+import deema_image from "../../src/assets/deema.png";
 
 import "swiper/css";
 import "swiper/css/navigation";
@@ -16,15 +22,17 @@ import Api from "../Services/Api";
 import { useCart } from "../context/CartContext"; // استخدم context للسلة
 import { addToCart, updateCartItem, removeCartItem } from "../api/cartApi";
 import "./ProductDetails.css";
-import { AiFillTikTok } from "react-icons/ai";
-import { FaSquareInstagram } from "react-icons/fa6";
 
+import { IoLogoInstagram } from "react-icons/io";
+import { useTranslation } from "react-i18next";
 const ProductDetails = () => {
-  const { slug } = useParams();
+  const { id, slug } = useParams();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isPopupOpenFixed, setIsPopupOpenFixed] = useState(false);
   const [isPopupOpenDynamic, setIsPopupOpenDynamic] = useState(false);
+  const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
 
   // Cart context
   const { cart, fetchCart } = useCart();
@@ -33,27 +41,33 @@ const ProductDetails = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await Api.get(`/products/showBySlug/${slug}`);
+        let res;
+        if (id) {
+           res = await Api.get(`/products/${id}`);
+        } else {
+           res = await Api.get(`/products/showBySlug/${slug}`);
+        }
+        
         if (res.data.success) setProduct(res.data.data);
       } catch (err) {
         console.error(err);
       }
     };
-    fetchProduct();
-  }, [slug]);
+    if (id || slug) fetchProduct();
+  }, [id, slug]);
 
   // تحقق إذا المنتج موجود بالسلة
   const cartItem = cart?.items?.find(item => item.product.id === product?.id);
 
   // إضافة المنتج للسلة
+
   const handleAddToCart = async () => {
     if (!product || loading) return;
 
     setLoading(true);
     try {
-      // جلب السلة الأخيرة من الباكيند قبل الإضافة
-      await fetchCart();
-      const existingItem = cart?.items?.find(item => item.product.id === product.id);
+      const latestCart = await fetchCart();
+      const existingItem = latestCart?.items?.find(item => item.product.id == product.id);
 
       if (existingItem) {
         await updateCartItem(existingItem.id, existingItem.quantity + 1);
@@ -62,37 +76,23 @@ const ProductDetails = () => {
       }
 
       await fetchCart();
+
+      // التحويل إلى صفحة السلة بعد الإضافة
+      navigate("/carts");
+
     } catch (err) {
       console.error(err);
+      alert(t("error_occurred") || "Error Occurred");
     } finally {
       setLoading(false);
     }
   };
 
 
-  // زيادة الكمية
-  const handleIncrease = async () => {
-    if (!cartItem) return;
-    setLoading(true);
-    try {
-      await updateCartItem(cartItem.id, cartItem.quantity + 1);
-      await fetchCart();
-    } finally {
-      setLoading(false);
-    }
+  const handleGoToCart = () => {
+    navigate("/carts");
   };
 
-  // تقليل الكمية
-  const handleDecrease = async () => {
-    if (!cartItem || cartItem.quantity === 1) return;
-    setLoading(true);
-    try {
-      await updateCartItem(cartItem.id, cartItem.quantity - 1);
-      await fetchCart();
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // حذف المنتج
   const handleRemove = async () => {
@@ -106,14 +106,85 @@ const ProductDetails = () => {
     }
   };
 
-  if (!product) return <div>جارٍ التحميل...</div>;
+
+const handleInstallClick = async () => {
+  const token = localStorage.getItem("customer_token");
+    const customer = JSON.parse(localStorage.getItem("customer") || "{}");
+  if (!token) {
+    navigate("/login-customer");
+    return;
+  }
+
+  try {
+    const res = await Api.post(
+      "/payment/deema/checkout",
+      {
+        productid: product.id,
+        customer_name: customer.name,   // <-- add this
+        customer_phone: customer.phone, // <-- add this
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (res.data) {
+      console.log(res.data);
+      window.location.href = res.data.data.redirect_link;
+    }
+  } catch (err) {
+    console.log(err);
+    alert(t("error_occurred")); // You might want to add this key too or leave alert
+  }
+  };
+
+  const handleShare = async () => {
+    if (!product) return;
+    const shareUrl = `${window.location.origin}/product/${product.id}/${product.slug}`;
+    const shareData = {
+      title: product.name,
+      text: `${t("share_message_start")} ${product.name}\n${t("share_message_price")} ${product.price} K.D\n`,
+      url: shareUrl,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.error("Error sharing:", err);
+      }
+    } else {
+      const textToCopy = `${shareData.text}\n${shareData.url}`;
+      navigator.clipboard.writeText(textToCopy)
+        .then(() => alert(t("share_link_success")))
+        .catch(() => alert(t("share_link_failed")));
+    }
+  };
+
+  if (!product) return <div>{t("loading")}</div>;
+
+  const isAr = i18n.language === 'ar';
 
   return (
-    <div className="product-details-page">
+    <div className="product-details-page" dir={isAr ? "rtl" : "ltr"}>
+      <Helmet>
+        <title>{product.name} | {t("like_new")}</title>
+        <meta name="description" content={product.note || `${t("buy_now")} ${product.name}`} />
+        
+        {/* Open Graph / Facebook / WhatsApp */}
+        <meta property="og:type" content="product" />
+        <meta property="og:title" content={product.name} />
+        <meta property="og:description" content={product.note || t("share_message_start")} />
+        {product.images?.[0] && <meta property="og:image" content={product.images[0]} />}
+        <meta property="og:url" content={`${window.location.origin}/product/${product.id}/${product.slug}`} />
+        <meta property="og:site_name" content={t("like_new")} />
+      </Helmet>
+
       <header className="header-product-details-page">
-        <Link to="/" className="icon-back">
-          <RiArrowRightLine />
-        </Link>
+        <div onClick={() => navigate(-1)} className="icon-back" style={{ cursor: 'pointer' }}>
+          <RiArrowRightLine style={{ transform: isAr ? 'rotate(0deg)' : 'rotate(180deg)' }} />
+        </div>
         <h6>{product.name}</h6>
       </header>
 
@@ -123,24 +194,29 @@ const ProductDetails = () => {
           <div className="views badge bg-white text-dark">
             {product.views} <FaRegEye />
           </div>
+          {product.device_clean == 100 && (
+            <span className="new badge bg-danger d-flex align-items-center">
+              {t("new")}
+            </span>
+          )}
+
           <div className="share">
-  <div
-    className="share-icon"
-    onClick={() => {
-      if (product) {
-        const textToCopy = `شاهد هذا المنتج: ${window.location.href}\nصورة المنتج: ${product.images[0]}`;
-        navigator.clipboard.writeText(textToCopy)
-          .then(() => alert("تم نسخ رابط المنتج مع الصورة!"))
-          .catch(err => console.error("فشل النسخ:", err));
-      }
-    }}
-  >
-    Share <FaShareAltSquare />
-  </div>
-  <Link className="whatsapp" to={`https://wa.me/?text=${encodeURIComponent(`شاهد هذا المنتج: ${window.location.href}\nصورة المنتج: ${product.images[0]}`)}`}>
-    <FaWhatsappSquare />
-  </Link>
-</div>
+            <div
+              className="share-icon"
+              onClick={handleShare}
+            >
+              <MdOutlineIosShare />
+            </div>
+            <div className="whatsapp">
+              <Link 
+                className="whatsapp" 
+                to={`https://wa.me/?text=${encodeURIComponent(`${t("whatsapp_message_start")}\n*${product.name}*\n${window.location.origin}/product/${product.id}/${product.slug}`)}`}
+                target="_blank"
+              >
+                <FaWhatsapp />
+              </Link>
+            </div>
+          </div>
         </div>
 
         {product.images && product.images.length > 0 && (
@@ -149,6 +225,7 @@ const ProductDetails = () => {
             slidesPerView={1}
             navigation
             modules={[Navigation]}
+            dir="ltr" // Keep swiper LTR usually for images, or dynamic
           >
             {product.images.map((src, i) => (
               <SwiperSlide key={i}>
@@ -166,73 +243,64 @@ const ProductDetails = () => {
 
         {/* Attributes */}
         <div className="attributes">
-          {product.ramsize > 0 && <div className="attribute">{product.ramsize} RAM</div>}
+          {product.ramsize > 0 && <div className="attribute">{product.ramsize} {t("ram")}</div>}
           {product.color && <div className="attribute">{product.color}</div>}
-          {product.memorysize > 0 && <div className="attribute">{product.memorysize} GB</div>}
-          <div className="attribute">{product.device_box ? "معا كارتون" : "بدون كارتون"}</div>
+          {product.memorysize > 0 && <div className="attribute">{product.memorysize} {t("gb")}</div>}
+          <div className="attribute">{product.device_clean == 100 ? t("with_box") : t("without_box")}</div>
         </div>
 
         {/* Comment */}
         {product.note && (
           <div className="comment-vendor">
-            <span><FaCommentAlt /> تعليق الفاحص</span>
+            <span><FaCommentAlt /> {t("inspector_comment")}</span>
             <p>{product.note}</p>
           </div>
         )}
 
         {/* Device Info */}
-        <div className="items">
-          <div className="item"><div>نظافة الجهاز</div><div>{product.device_clean}%</div></div>
-          <div className="item" onClick={() => setIsPopupOpenDynamic(true)}><div>شهادة الفحص</div><div>تم الفحص <FaArrowLeft /></div></div>
-          <div className="item" onClick={() => setIsPopupOpenFixed(true)}><div>ضمان تجربة وإرجاع</div><div>3 أيام <FaArrowLeft /></div></div>
-          <div className="item"><div>كفالة عند الشراء</div><div>3 شهور</div></div>
-        </div>
+        {product.device_clean !== 100 && (
+          <div className="items">
+            <div className="item"><div>{t("device_cleanliness")}</div><div>{product.device_clean}%</div></div>
+            <div className="item" onClick={() => setIsPopupOpenDynamic(true)}><div>{t("inspection_certificate")}</div><div>{t("checked")} <FaArrowLeft style={{ transform: isAr ? 'rotate(0deg)' : 'rotate(180deg)' }} /></div></div>
+            <div className="item" onClick={() => setIsPopupOpenFixed(true)}><div>{t("trial_warranty")}</div><div>{t("days_3")} <FaArrowLeft style={{ transform: isAr ? 'rotate(0deg)' : 'rotate(180deg)' }} /></div></div>
+            <div className="item"><div>{t("purchase_warranty")}</div><div>{t("months_3")}</div></div>
+          </div>
+        )}
+
 
         {/* Payments */}
         <div className="payments">
           <header>
-            <button>تجربة مجانية 3 أيام</button>
+            {product.device_clean !== 100 && (
+              <button>{t("free_trial")}</button>
+            )}
+
             <h2 className="price">{product.price}<span className="unit">K.D</span></h2>
           </header>
 
           <div className="payment">
-            <Link>قسط جهازك مع ديمة</Link>
-            {/* 
+            <div onClick={handleInstallClick} >{t("install_with_deema")} <img src={deema_image} width={40} alt="" /></div>
+
             {!cartItem ? (
               <button
-                className="btn btn-primary"
+                className="buy-now"
                 onClick={handleAddToCart}
                 disabled={loading || !cart}
               >
-                اضف للسلة
-              </button>) : (
-              <div className="quantity-controls">
-                <button className="btn btn-primary" onClick={handleDecrease} disabled={loading || cartItem.quantity === 1}>-</button>
-                <span>{cartItem.quantity}</span>
-                <button className="btn btn-primary" onClick={handleIncrease} disabled={loading}>+</button>
-                <button className="btn btn-danger" onClick={handleRemove} disabled={loading}>حذف</button>
-              </div>
-            )} */}
-            {!cartItem ? (
-              <button
-                className="btn btn-primary"
-                onClick={handleAddToCart}
-                disabled={loading || !cart}
-              >
-                اضف للسلة
+                {t("buy_now")}
               </button>
             ) : (
               <button
-                className="btn btn-danger"
-                onClick={handleRemove}
+                className="remove-product-cart"
+                onClick={handleGoToCart} // بدل handleRemove
                 disabled={loading}
               >
-                حذف
+                {t("product_added")}
               </button>
             )}
           </div>
 
-          <h3>الدفع مؤمن بواسطة بوابة الدفع MYFATORA <RiSecurePaymentLine /></h3>
+          <h3>{t("payment_secured")} <RiSecurePaymentLine /></h3>
         </div>
       </div>
 
@@ -241,58 +309,58 @@ const ProductDetails = () => {
         <div className="popup-overlay-dynamic" onClick={() => setIsPopupOpenDynamic(false)}>
           <div className="popup-content-dynamic" onClick={e => e.stopPropagation()}>
             <header>
-              <h3>شهادة الفحص</h3>
-              <button onClick={() => setIsPopupOpenDynamic(false)}><FaArrowCircleLeft /></button>
+              <h3>{t("inspection_certificate")}</h3>
+              <button onClick={() => setIsPopupOpenDynamic(false)}><FaArrowCircleLeft style={{ transform: isAr ? 'rotate(0deg)' : 'rotate(180deg)' }} /></button>
             </header>
             <div className="image">
-              <span>تم الفحص <IoCheckmarkDoneCircle /></span>
+              <span>{t("checked")} <IoCheckmarkDoneCircle /></span>
               <img src={product.image} alt={product.name} />
             </div>
 
             <div className="popup-overlay-dynamic-items">
               <div className="popup-overlay-dynamic-item">
-                <h6>نـوع الجهاز</h6>
+                <h6>{t("device_type")}</h6>
                 <h6>{product.name}</h6>
               </div>
               <div className="popup-overlay-dynamic-item">
-                <h6>حالة الجهاز</h6>
-                <h6>{product.device_status == 1 ? "مفتوح" : "جديد"}</h6>
+                <h6>{t("device_status")}</h6>
+                <h6>{product.device_status == 1 ? t("open") : t("new")}</h6>
               </div>
               <div className="popup-overlay-dynamic-item">
-                <h6>نظافة الجهاز</h6>
+                <h6>{t("device_cleanliness")}</h6>
                 <h6>%{product.device_clean}</h6>
               </div>
               <div className="popup-overlay-dynamic-item">
-                <h6>خدوش جسم الجهاز</h6>
-                <h6>{product.device_body == 1 ? "لا يوجد" : "يوجد"}</h6>
+                <h6>{t("scratches_body")}</h6>
+                <h6>{product.device_body == 1 ? t("found") : t("not_found")}</h6>
               </div>
               <div className="popup-overlay-dynamic-item">
-                <h6>الشاشة زجاج خدوش</h6>
-                <h6>{product.device_display ?? "-"}</h6>
+                <h6>{t("scratches_screen")}</h6>
+                <h6>{product.device_display ? t("found") : t("not_found")}</h6>
               </div>
               <div className="popup-overlay-dynamic-item">
-                <h6>السنسرات الواي فاي</h6>
-                <h6>{product.device_wifi_blu ?? "-"}</h6>
+                <h6>{t("sensors_wifi")}</h6>
+                <h6>{product.device_wifi_blu ?  t("working") : t("not_working")}</h6>
               </div>
               <div className="popup-overlay-dynamic-item">
-                <h6>وظائف حساسات</h6>
-                <h6>{product.device_camera ?? "-"}</h6>
+                <h6>{t("sensors_functions")}</h6>
+                <h6>{product.device_camera ? t("working") : t("not_working")}</h6>
               </div>
               <div className="popup-overlay-dynamic-item">
-                <h6>زر التشغيل - رفع خفض</h6>
-                <h6>{product.device_button ?? "-"}</h6>
+                <h6>{t("power_button")}</h6>
+                <h6>{product.device_button ? t("working") : t("not_working")}</h6>
               </div>
               <div className="popup-overlay-dynamic-item">
-                <h6>البطارية ونسبة</h6>
-                <h6>{product.device_battery ?? "-"}</h6>
+                <h6>{t("battery_percentage")}</h6>
+                <h6>%{product.device_battery ?? ""}</h6>
               </div>
               <div className="popup-overlay-dynamic-item">
-                <h6>السماعة الخارجية</h6>
-                <h6>{product.device_speaker ?? "-"}</h6>
+                <h6>{t("external_speaker")}</h6>
+                <h6>{product.device_speaker ? t("working") : t("not_working")}</h6>
               </div>
               <div className="popup-overlay-dynamic-item">
-                <h6>البصمات : بصمة الوجه</h6>
-                <h6>{product.device_fingerprint ?? "-"}</h6>
+                <h6>{t("fingerprints")}</h6>
+                <h6>{product.device_fingerprint ? t("working") : t("not_working")}</h6>
               </div>
             </div>
           </div>
@@ -303,14 +371,14 @@ const ProductDetails = () => {
       {isPopupOpenFixed && (
         <div className="popup-overlay-fixed" onClick={() => setIsPopupOpenFixed(false)}>
           <div className="popup-content-fixed" onClick={e => e.stopPropagation()}>
-            <header><h2>ضمان تجربة وإرجاع</h2></header>
-            <h4>كيفية عمل الفترة التجريبية المجانية الخاصة بكم؟</h4>
+            <header><h2>{t("trial_warranty")}</h2></header>
+            <h4>{t("how_trial_works")}</h4>
             <div className="items-descrption">
-              <div className="item-descrption"><FaCalendarAlt className="icon" /><div><h6>يوم الشراء</h6><p>ستحصل على الجهاز التجريبي لمدة 3 أيام وسيتم خصم المبلغ من حسابك في محفظتك.</p></div></div>
-              <div className="item-descrption"><FaStar className="icon" /><div><h6>يوم 3</h6><p>انتهاء الفترة التجريبية وإيداع المبلغ أو استرداده بالكامل.</p></div></div>
-              <div className="item-descrption"><FaCog className="icon" /><div><h6>يوم 4</h6><p>تبدأ الكفالة الممتدة 3 أشهر عند الشراء.</p></div></div>
+              <div className="item-descrption"><FaCalendarAlt className="icon" /><div><h6>{t("purchase_day")}</h6><p>{t("purchase_day_desc")}</p></div></div>
+              <div className="item-descrption"><FaStar className="icon" /><div><h6>{t("day_3")}</h6><p>{t("day_3_desc")}</p></div></div>
+              <div className="item-descrption"><FaCog className="icon" /><div><h6>{t("day_4")}</h6><p>{t("day_4_desc")}</p></div></div>
             </div>
-            <button className="btn btn-danger btn-sm" onClick={() => setIsPopupOpenFixed(false)}>إغلاق <FaWindowClose /></button>
+            <button className="btn btn-danger btn-sm" onClick={() => setIsPopupOpenFixed(false)}>{t("close")} <FaWindowClose /></button>
           </div>
         </div>
       )}
@@ -318,27 +386,30 @@ const ProductDetails = () => {
 
       <div className="shipping-detials">
         <div className="item">
-          <MdLocalShipping />
-          <h4>شحن سريع</h4>
+          <img src={shipping} alt="" />
+          <h4>{t("fast_shipping")}</h4>
         </div>
         <div className="item">
-          <IoMdClock />
-          <h4>دعم فني متواصل</h4>
+          <img src={hourse} alt="" />
+          <h4>{t("continuous_support")}</h4>
         </div>
         <div className="item">
-          <SiMoneygram />
-          <h4>ضمان الاسترجاع</h4>
+          <img src={return_image} alt="" />
+          <h4>{t("return_warranty")}</h4>
         </div>
       </div>
 
+
       <div className="account-social-media">
-        <h6>حساباتنا على السوشيال ميديا</h6>
-        <Link to="">
-          <AiFillTikTok />
-        </Link>
-        <Link to="">
-          <FaSquareInstagram />
-        </Link>
+        <h6>{t("social_media_accounts")}</h6>
+        <div className="icons">
+          <Link to="">
+            <FaTiktok />
+          </Link>
+          <Link to="">
+            <IoLogoInstagram />
+          </Link>
+        </div>
       </div>
     </div>
   );

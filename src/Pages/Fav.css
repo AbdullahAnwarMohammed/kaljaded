@@ -220,13 +220,6 @@
   transform: translateY(-2px);
 }
 
-.checkout-btn {
-  background-color: #27ae60;
-  color: white;
-  border: none;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
-}
 
 .checkout-btn:hover {
   background-color: #219653;

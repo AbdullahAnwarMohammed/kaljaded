@@ -1,0 +1,15 @@
+<?php
+
+namespace App\Http\Resources\Api\User\Setting;
+
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+
+class SettingResource extends JsonResource
+{
+
+    public function toArray(Request $request): array
+    {
+        return parent::toArray($request);
+    }
+}

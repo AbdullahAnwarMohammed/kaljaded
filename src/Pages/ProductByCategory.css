@@ -1,16 +1,20 @@
-.PageProductByCategory{
+.PageProductByCategory {
   padding-bottom: 100px;
 }
-.PageProductByCategory .title {
-  background-color: #283158;
+.PageProductByCategory .back {
   color: #fff;
-  padding: 10px 20px;
+  font-size: 20px;
+}
+.PageProductByCategory .title {
+  background-color: #435292;
+  color: #fff;
+  padding: 6px 20px;
   display: flex;
   align-items: center;
 }
 .PageProductByCategory .title h4 {
   margin: 0 auto;
-  font-size: 18px;
+  font-size: 15px;
 }
 .PageProductByCategory .title span svg {
   font-size: 27px;
@@ -20,9 +24,9 @@
   display: flex;
   align-items: center;
   overflow: hidden;
-  gap: 20px;
-  padding: 10px 0;
+  gap: 10px;
   margin: 0 10px;
+  font-size: 12px;
 }
 .PageProductByCategory .subcategory a {
   color: #555;
@@ -37,6 +41,7 @@
 .PageProductByCategory .products-row {
   display: flex;
   flex-direction: column;
+      padding: 0 13px;
 }
 
 .PageProductByCategory .products-grid {
@@ -98,4 +103,96 @@ input:checked + .slider {
 
 input:checked + .slider:before {
   transform: translateX(24px);
+}
+
+.categories-tabs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 15px;
+  background-color: #283158;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  position: sticky; /* Make it sticky below the header if header were sticky, otherwise just normal flow */
+  top: 0;
+  z-index: 100;
+}
+
+.categories-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.categories-tabs-child {
+  display: flex;
+  gap: 8px;
+}
+
+.category-tab {
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 25px; /* More rounded */
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  color: rgba(255, 255, 255, 0.8); /* Slightly transparent inactive */
+  border: 1px solid transparent; /* Prevent layout shift */
+}
+
+.category-tab:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.category-tab.active {
+  background: #fff;
+  color: #283158;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Subcategories */
+.subcategories-tabs {
+  width: 100%;
+  background-color: #f9f9f9; /* Light background for contrast */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  border-bottom: 1px solid #eee;
+}
+
+.subcategories-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.subcategories-tabs-child {
+  display: flex;
+  gap: 10px;
+  padding: 12px 15px;
+  align-items: center;
+}
+
+.subcategory-tab {
+  white-space: nowrap;
+  padding: 6px 14px;
+  cursor: pointer;
+  border-radius: 20px; /* Rounded pill shape */
+  font-size: 13px;
+  color: #666;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  transition: all 0.2s ease;
+}
+
+.subcategory-tab:hover {
+  border-color: #435292;
+  color: #435292;
+}
+
+.subcategory-tab.active {
+  background: #435292;
+  color: #fff;
+  border-color: #435292;
+  box-shadow: 0 2px 8px rgba(67, 82, 146, 0.25);
 }

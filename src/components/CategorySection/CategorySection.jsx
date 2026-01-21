@@ -4,7 +4,7 @@ import ProductCard from "./ProductCard";
 import { useTranslation } from "react-i18next";
 import { IoIosArrowForward } from "react-icons/io";
 
-const CategorySection = ({ data, onViewAll }) => {
+const CategorySection = React.memo(({ data, onViewAll }) => {
     const { t } = useTranslation();
 
     const { category, products } = data;
@@ -19,7 +19,7 @@ const CategorySection = ({ data, onViewAll }) => {
                     </button>
                 </div>
 
-                <div className="products-row">
+                <div className="category-horizontal-scroll">
                     {products.map((p) => (
                         <ProductCard key={p.id} p={p} />
                     ))}
@@ -28,6 +28,6 @@ const CategorySection = ({ data, onViewAll }) => {
             </div>
         </div>
     );
-};
+});
 
 export default CategorySection;

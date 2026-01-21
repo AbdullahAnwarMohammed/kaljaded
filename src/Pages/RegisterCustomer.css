@@ -71,11 +71,11 @@
 .register-customer-page .app-register  .form-group {
   margin: 15px 0;
 }
-.register-customer-page .app-register  .form-group.with-icon {
+.register-customer-page .app-register .input-wrapper {
   position: relative;
 }
 
-.register-customer-page .app-register  .field-icon {
+.register-customer-page .app-register .field-icon {
   position: absolute;
   right: 15px;
   top: 50%;
@@ -84,8 +84,10 @@
   color: #888;
 }
 
-.register-customer-page .app-register  .form-group.with-icon input {
+.register-customer-page .app-register .input-wrapper input {
   padding-right: 45px;
+  width: 100%; /* Ensure input takes full width */
+  box-sizing: border-box; /* Include padding/border in width */
 }
 
 /* إظهار/إخفاء الباسورد */
@@ -133,14 +135,39 @@
   outline: none;
   padding: 10px 5px;
 }
-.input-error {
-    border: 1px solid #ff4d4f !important;
+/* Validation Errors Styling */
+.register-customer-page .error-msg {
+  color: #ff6b6b;
+  font-size: 13px;
+  text-align: right;
+  margin-top: 8px; 
+  margin-bottom: 10px;
+  margin-right: 5px;
+  font-weight: bold;
+  display: block;
 }
 
-.error-msg {
-    color: #ff4d4f;
-    font-size: 12px;
-    margin-top: 5px;
-    display: block;
-    font-weight: bold;
+.register-customer-page .app-register .form-group {
+    margin-bottom: 15px;
+}
+
+.register-customer-page .app-register input.input-error, 
+.register-customer-page .app-register .phone-field.input-error {
+  border: 1px solid #ff6b6b !important;
+  background-color: #fff0f0;
+}
+
+.register-customer-page .app-register .phone-field.input-error input {
+    background-color: transparent;
+}
+
+.register-customer-page .general-error {
+  background-color: rgba(255, 107, 107, 0.2);
+  color: #ff6b6b;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ff6b6b;
+  margin-bottom: 20px;
+  font-size: 14px;
+  font-weight: bold;
 }

@@ -87,11 +87,25 @@ const RegisterCustomer = () => {
             navigate("/");
 
         } catch (error) {
-            console.log(error);
+            if (error.response && error.response.status === 422) {
+                // هنا بنجيب أخطاء الـ validation من السيرفر
+                const serverErrors = error.response.data.errors;
+                let formattedErrors = {};
+
+                // تحويل المصفوفة لكل حقل إلى نص
+                for (let key in serverErrors) {
+                    formattedErrors[key] = serverErrors[key][0];
+                }
+
+                setErrors(formattedErrors);
+            } else {
+                console.log(error);
+            }
         } finally {
             setLoading(false);
         }
     };
+
 
     return (
         <div className="register-customer-page">
@@ -106,39 +120,44 @@ const RegisterCustomer = () => {
 
             <div className="app-register">
                 <h3>{t("create_account")}</h3>
+                {errors.general && <div className="general-error">{errors.general}</div>}
 
                 <form onSubmit={handleSubmit}>
 
-                    {/* اسم المستخدم */}
-                    <div className="form-group with-icon">
-                        <RiUser3Line className="field-icon" />
-                        <input
-                            type="text"
-                            name="name"
-                            placeholder={t("username")}
-                            value={form.name}
-                            onChange={handleChange}
-                            className={`form-control ${errors.name ? "input-error" : ""}`}
-                        />
-                        {errors.name && <small className="error-msg">{errors.name}</small>}
+                    {/* البريد الإلكتروني */}
+                    <div className="form-group">
+                        <div className="input-wrapper">
+                            <RiUser3Line className="field-icon" />
+                            <input
+                                type="email"
+                                name="email"
+                                placeholder={t("email")}
+                                value={form.email}
+                                onChange={handleChange}
+                                className={`form-control ${errors.email ? "input-error" : ""}`}
+                            />
+                        </div>
+                        {errors.email && <div className="error-msg">{errors.email}</div>}
                     </div>
 
-                    {/* البريد الإلكتروني */}
-                    <div className="form-group with-icon">
-                        <RiUser3Line className="field-icon" />
-                        <input
-                            type="email"
-                            name="email"
-                            placeholder={t("email")}
-                            value={form.email}
-                            onChange={handleChange}
-                            className={`form-control ${errors.email ? "input-error" : ""}`}
-                        />
-                        {errors.email && <small className="error-msg">{errors.email}</small>}
+                    {/* اسم المستخدم */}
+                    <div className="form-group">
+                        <div className="input-wrapper">
+                            <RiUser3Line className="field-icon" />
+                            <input
+                                type="text"
+                                name="name"
+                                placeholder={t("username")}
+                                value={form.name}
+                                onChange={handleChange}
+                                className={`form-control ${errors.name ? "input-error" : ""}`}
+                            />
+                        </div>
+                        {errors.name && <div className="error-msg">{errors.name}</div>}
                     </div>
 
                     {/* الهاتف */}
-                    <div className="form-group phone-field">
+                    <div className={`form-group phone-field ${errors.phone ? "input-error" : ""}`}>
                         <div className="country">
                             <img src="https://flagcdn.com/w40/kw.png" alt="Kuwait" />
                             <span>+965</span>
@@ -150,43 +169,47 @@ const RegisterCustomer = () => {
                             placeholder={t("phone")}
                             value={form.phone}
                             onChange={handleChange}
-                            className={`form-control phone-input ${errors.phone ? "input-error" : ""}`}
+                            className="form-control phone-input"
                         />
                     </div>
-                    {errors.phone && <small className="error-msg">{errors.phone}</small>}
+                    {errors.phone && <div className="error-msg">{errors.phone}</div>}
 
                     {/* كلمة المرور */}
-                    <div className="form-group with-icon">
-                        <RiLock2Line className="field-icon" />
-                        <input
-                            type={showPass ? "text" : "password"}
-                            name="password"
-                            placeholder={t("password")}
-                            value={form.password}
-                            onChange={handleChange}
-                            className={`form-control ${errors.password ? "input-error" : ""}`}
-                        />
-                        <span className="show-pass" onClick={() => setShowPass(!showPass)}>
-                            {showPass ? <RiEyeOffLine /> : <RiEyeLine />}
-                        </span>
-                        {errors.password && <small className="error-msg">{errors.password}</small>}
+                    <div className="form-group">
+                        <div className="input-wrapper">
+                            <RiLock2Line className="field-icon" />
+                            <input
+                                type={showPass ? "text" : "password"}
+                                name="password"
+                                placeholder={t("password")}
+                                value={form.password}
+                                onChange={handleChange}
+                                className={`form-control ${errors.password ? "input-error" : ""}`}
+                            />
+                            <span className="show-pass" onClick={() => setShowPass(!showPass)}>
+                                {showPass ? <RiEyeOffLine /> : <RiEyeLine />}
+                            </span>
+                        </div>
+                        {errors.password && <div className="error-msg">{errors.password}</div>}
                     </div>
 
                     {/* تأكيد كلمة المرور */}
-                    <div className="form-group with-icon">
-                        <RiLock2Line className="field-icon" />
-                        <input
-                            type={showConfirmPass ? "text" : "password"}
-                            name="password_confirmation"
-                            placeholder={t("confirm_password")}
-                            value={form.password_confirmation}
-                            onChange={handleChange}
-                            className={`form-control ${errors.password_confirmation ? "input-error" : ""}`}
-                        />
-                        <span className="show-pass" onClick={() => setShowConfirmPass(!showConfirmPass)}>
-                            {showConfirmPass ? <RiEyeOffLine /> : <RiEyeLine />}
-                        </span>
-                        {errors.password_confirmation && <small className="error-msg">{errors.password_confirmation}</small>}
+                    <div className="form-group">
+                        <div className="input-wrapper">
+                            <RiLock2Line className="field-icon" />
+                            <input
+                                type={showConfirmPass ? "text" : "password"}
+                                name="password_confirmation"
+                                placeholder={t("confirm_password")}
+                                value={form.password_confirmation}
+                                onChange={handleChange}
+                                className={`form-control ${errors.password_confirmation ? "input-error" : ""}`}
+                            />
+                            <span className="show-pass" onClick={() => setShowConfirmPass(!showConfirmPass)}>
+                                {showConfirmPass ? <RiEyeOffLine /> : <RiEyeLine />}
+                            </span>
+                        </div>
+                        {errors.password_confirmation && <div className="error-msg">{errors.password_confirmation}</div>}
                     </div>
 
                     <div className="form-group">

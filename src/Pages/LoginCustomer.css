@@ -21,7 +21,7 @@
   font-size: 32px;
   color: #fff;
 }
-.login-customer-page .form-group.with-icon {
+.login-customer-page .input-wrapper {
   position: relative;
 }
 
@@ -35,8 +35,10 @@
 }
 
 /* إزاحة النص داخل الإنبت بعيد عن الأيقونة */
-.login-customer-page .form-group.with-icon input {
+.login-customer-page .input-wrapper input {
   padding-right: 48px;
+  width: 100%; /* Ensure input takes full width of wrapper */
+  box-sizing: border-box; /* Include padding/border in width */
 }
 
 /* زر إظهار/إخفاء كلمة المرور */
@@ -55,8 +57,8 @@
 }
 
 .login-customer-page .app-login input {
-  padding: 20px;
-  margin: 20px 0;
+  padding: 20px 40px;
+  margin: 7px 0;
   border-radius: 10px;
   border: none;
   background-color: #e9eaec;
@@ -94,5 +96,33 @@
 }
 .login-customer-page .register-customer-vendor a {
   color: #aeb4d0;
+  font-weight: bold;
+}
+
+/* Validation Errors Styling */
+.login-customer-page .error-msg {
+  color: #ff6b6b;
+  font-size: 13px;
+  text-align: right;
+  margin-top: 8px;
+  margin-bottom: 10px;
+  margin-right: 5px;
+  font-weight: bold;
+  display: block;
+}
+
+.login-customer-page .app-login input.input-error {
+  border: 1px solid #ff6b6b;
+  background-color: #fff0f0;
+}
+
+.login-customer-page .general-error {
+  background-color: rgba(255, 107, 107, 0.2);
+  color: #ff6b6b;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ff6b6b;
+  margin-bottom: 20px;
+  font-size: 14px;
   font-weight: bold;
 }

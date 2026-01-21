@@ -1,53 +1,72 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense, lazy } from "react";
 import { useNavigate } from 'react-router-dom';
 
 import ImageSlider from '../components/ImageSlider/ImageSlider';
-import Category from '../components/Category/Category';
-import CategorySection from '../components/CategorySection/CategorySection';
-import Welcome from '../components/Welcome/Welcome';
 import Search from '../components/Search/Search';
-
 import Api from '../Services/Api'; // axios instance
+import HomeSkeleton from "../components/HomeSkeleton";
+
+// Lazy load non-critical components
+const Category = lazy(() => import('../components/Category/Category'));
+const CategorySection = lazy(() => import('../components/CategorySection/CategorySection'));
+const Welcome = lazy(() => import('../components/Welcome/Welcome'));
 
 const Home = () => {
 
     const navigate = useNavigate();
 
     const [sections, setSections] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         
         const fetchHomeData = async () => {
             try {
-                const res = await Api.get("/categories-with-products"); // endpoint يجلب categories مع products
+                const res = await Api.get("/categories-with-products", { cache: true }); // endpoint يجلب categories مع products
                 if (res.data.success) {
                     setSections(res.data.data);
                 }
             } catch (err) {
                 console.error("Failed to fetch home data:", err);
+            } finally {
+                setLoading(false);
             }
         };
         fetchHomeData();
     }, []);
 
 
-    const handleViewAll = (title) => {
-        navigate(`/category/${title}`);
+    const handleViewAll = (slug) => {
+        navigate(`/category/${slug}`);
     };
+
+    if (loading) {
+        return (
+            <>
+                <Search />
+                <ImageSlider />
+                <HomeSkeleton />
+            </>
+        );
+    }
 
     return (
         <>
             <Search />
             <ImageSlider />
-            <Category />
-            {sections.map(section => (
-                <CategorySection
-                    key={section.category.id}
-                    data={section}  
-                    onViewAll={() => handleViewAll(section.category.slug)}
-                />
-            ))}
-            <Welcome />
+            <Suspense fallback={<HomeSkeleton />}>
+                <Category />
+                
+                {sections.map((section) => (
+                    <CategorySection 
+                        key={section.category.id} 
+                        data={section} 
+                        onViewAll={() => handleViewAll(section.category.slug)} 
+                    />
+                ))}
+
+                <Welcome />
+            </Suspense>
         </>
     );
 };

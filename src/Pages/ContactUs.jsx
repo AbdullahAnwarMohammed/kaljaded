@@ -2,7 +2,8 @@ import React from 'react'
 import "./ContactUs.css";
 import { Link } from "react-router-dom";
 import { RiArrowRightLine, RiInstagramFill, RiTiktokFill, RiAppleFill, RiGooglePlayFill, RiWhatsappFill } from "react-icons/ri";
-import image from "../assets/banner.png";
+import image1 from "../assets/image_mobile.png";
+import image2 from "../assets/image_mobile1.png";
 import { useTranslation } from "react-i18next";
 
 const ContactUs = () => {
@@ -18,11 +19,9 @@ const ContactUs = () => {
             </header>
 
             <div className="banner">
-                <img src={image} alt="" />
-                <div className="content">
-                    <h2>{t("installments_banner")}</h2>
-                    <button>{t("collaboration_btn")}</button>
-                </div>
+                <img src={image1} alt="" />
+                <img src={image2} alt="" />
+               
             </div>
 
             <div className="social">

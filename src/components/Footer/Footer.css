@@ -2,7 +2,7 @@
   display: flex;
   justify-content: space-between;
   background-color: #283158;
-  padding: 13px 10px;
+  padding: 6px 15px;
   position: fixed;
   bottom: 0;
   z-index: 999999999999;
@@ -10,14 +10,22 @@
 }
 .footer-mobile p {
   margin: 0;
-  font-size: 12px;
+  font-size: 11px;
 }
 .footer-mobile .item {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: self-end;
+  justify-content: space-between;
 }
-.footer-mobile .item a {
+.footer-mobile .item.added svg {
+  background: #435292;
+  width: 50px;
+  height: 50px;
+  position: absolute;
+  top: -53px;
+  border-radius: 50%;
+}
+.footer-mobile .item a.footer-link {
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -25,7 +33,11 @@
   align-items: center;
   color: #fff;
   position: relative;
+  opacity: .6;
 }
+/* .footer-mobile .item a img {
+  width: 28px;
+} */
 
 .footer-mobile .item a span {
   position: absolute;
@@ -35,6 +47,88 @@
 .footer-mobile .item a span.offer-badge {
   right: -32px;
 }
-.footer-mobile .item a svg {
-  font-size: 21px;
+.footer-mobile .item:not(.added) svg {
+  font-size: 26px;
+  margin-bottom: 3px;
 }
+
+
+
+
+
+
+.footer-link.active {
+  opacity: 1 !important;
+}
+
+.cart-notification-banner {
+    position: fixed;
+    bottom: 74px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 400px;
+    background-color: #3b4d75;
+    color: white;
+    padding: 4px 15px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-decoration: none;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    z-index: 1001;
+    animation: slideUp 0.3s ease-out;
+}
+
+
+
+.cart-notification-price {
+  background-color: transparent;
+  border: 1px solid white;
+  border-radius: 20px;
+  padding: 5px 15px;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.cart-notification-text {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.cart-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.banner-close-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 20px;
+  height: 20px;
+  background-color: #ef4444; /* Red color */
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  z-index: 1002;
+}
+

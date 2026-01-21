@@ -64,16 +64,7 @@ const ProductsInstallment = () => {
 
     return (
         <div className="ProductsByCategoryPage">
-            <div className="title">
-                <span
-                    className='back'
-                    onClick={() => navigate(-1)}
-                    style={{ cursor: "pointer" }}
-                >
-                    <RiArrowRightLine />
-                </span>
-                <h4>المنتجات المتاحة بالقسط</h4>
-            </div>
+          
 
             {/* Filter بالقسم */}
             <select
