@@ -6,10 +6,10 @@ import Search from '../components/Search/Search';
 import Api from '../Services/Api'; // axios instance
 import HomeSkeleton from "../components/HomeSkeleton";
 
-// Lazy load non-critical components
-const Category = lazy(() => import('../components/Category/Category'));
-const CategorySection = lazy(() => import('../components/CategorySection/CategorySection'));
-const Welcome = lazy(() => import('../components/Welcome/Welcome'));
+// Static imports for immediate loading
+import Category from '../components/Category/Category';
+import CategorySection from '../components/CategorySection/CategorySection';
+import Welcome from '../components/Welcome/Welcome';
 
 const Home = () => {
 
@@ -22,7 +22,7 @@ const Home = () => {
         
         const fetchHomeData = async () => {
             try {
-                const res = await Api.get("/categories-with-products", { cache: true }); // endpoint يجلب categories مع products
+                const res = await Api.get("/categories-with-products", { cache: true, skipLoader: true });
                 if (res.data.success) {
                     setSections(res.data.data);
                 }
@@ -40,33 +40,26 @@ const Home = () => {
         navigate(`/category/${slug}`);
     };
 
-    if (loading) {
-        return (
-            <>
-                <Search />
-                <ImageSlider />
-                <HomeSkeleton />
-            </>
-        );
-    }
-
     return (
         <>
             <Search />
             <ImageSlider />
-            <Suspense fallback={<HomeSkeleton />}>
-                <Category />
-                
-                {sections.map((section) => (
+            {/* Suspense removed for eager loading */}
+            <Category />
+            
+            {loading ? (
+                <HomeSkeleton showCategories={false} /> 
+            ) : (
+                sections.map((section) => (
                     <CategorySection 
                         key={section.category.id} 
                         data={section} 
                         onViewAll={() => handleViewAll(section.category.slug)} 
                     />
-                ))}
+                ))
+            )}
 
-                <Welcome />
-            </Suspense>
+            <Welcome />
         </>
     );
 };

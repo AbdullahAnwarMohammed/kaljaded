@@ -5,10 +5,10 @@ import { useTranslation } from "react-i18next";
 import LazyImage from "../LazyImage/LazyImage";
 import { addToCart } from "../../api/cartApi";
 import { useCart } from "../../context/CartContext";
-import { useState } from "react";
+import React, { useState } from "react";
 import "./CategorySection.css";
 
-const ProductCard = ({ p, showFastBadge = false }) => {
+const ProductCard = React.memo(({ p, showFastBadge = false }) => {
   const { t } = useTranslation();
   const images = p.images && p.images.length ? p.images : [p.image];
   const navigate = useNavigate();
@@ -16,7 +16,7 @@ const ProductCard = ({ p, showFastBadge = false }) => {
   const [loading, setLoading] = useState(false);
 
   // Check if product is already in cart
-  const isInCart = cart?.items?.some((item) => item.product.id === p.id);
+  const isInCart = cart?.items?.some((item) => item?.product?.id === p?.id);
 
   // Check if product is fast (within 1 hour)
   const isFast = () => {
@@ -142,6 +142,6 @@ const ProductCard = ({ p, showFastBadge = false }) => {
       </div>
     </div>
   );
-};
+});
 
 export default ProductCard;

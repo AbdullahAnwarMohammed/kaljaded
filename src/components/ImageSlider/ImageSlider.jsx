@@ -11,22 +11,33 @@ import "slick-carousel/slick/slick-theme.css";
 
 const ImageSlider = () => {
     const [banners, setBanners] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [showPopup, setShowPopup] = useState(false);
     const [popupContent, setPopupContent] = useState(null);
 
     useEffect(() => {
         const fetchBanners = async () => {
             try {
-                const res = await Api.get("/banners", { cache: true });
+                const res = await Api.get("/banners", { cache: true, skipLoader: true });
                 if (res.data.success) {
                     setBanners(res.data.data);
                 }
             } catch (err) {
                 console.error("Failed to fetch banners:", err);
+            } finally {
+                setLoading(false);
             }
         };
         fetchBanners();
     }, []);
+
+    if (loading) {
+        return (
+            <div className="image-slider" style={{ width: "100%", margin: "auto", padding: "10px", position: "relative" }}>
+                 <div className="skeleton-loader" style={{ width: '100%', height: 'auto', aspectRatio: '16/9', borderRadius: '11px' }}></div>
+            </div>
+        );
+    }
 
     const openPopup = (item) => {
         setPopupContent(item);
@@ -55,6 +66,7 @@ const ImageSlider = () => {
                                 alt={item.title}
                                 className="slider-image" // Add a class for specific slider styling if needed
                                 style={{ width: '100%', height: '100%' }}
+                                priority={index === 0}
                             />
                             <div
                             >

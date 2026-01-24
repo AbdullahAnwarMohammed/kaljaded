@@ -15,32 +15,37 @@ import { LoadingProvider } from "./context/LoadingContext";
 import Spinner from "./components/Spinner";
 import { CartProvider } from "./context/CartContext";
 
+import { lazyWithRetry } from "./utils/lazyWithRetry";
+
+// Static import for Home to ensure faster LCP and header visibility
+import Home from "./Pages/Home";
+
 // Lazy loading components
-const Home = lazy(() => import("./Pages/Home"));
-const ProductByCategory = lazy(() => import("./Pages/ProductByCategory"));
-const Cart = lazy(() => import("./Pages/Cart"));
-const Fav = lazy(() => import("./Pages/Fav"));
-const LoginCustomer = lazy(() => import("./Pages/LoginCustomer"));
-const RegisterCustomer = lazy(() => import("./Pages/RegisterCustomer"));
-const RegisterVendor = lazy(() => import("./Pages/RegisterVendor"));
-const ContactUs = lazy(() => import("./Pages/ContactUs"));
-const ProductDeatils = lazy(() => import("./Pages/ProductDeatils"));
-const Merchant = lazy(() => import("./Pages/Merchant/Merchant"));
-const MerchantDetail = lazy(() =>
+// const Home = lazyWithRetry(() => import("./Pages/Home")); // Converted to static
+const ProductByCategory = lazyWithRetry(() => import("./Pages/ProductByCategory"));
+const Cart = lazyWithRetry(() => import("./Pages/Cart"));
+const Fav = lazyWithRetry(() => import("./Pages/Fav"));
+const LoginCustomer = lazyWithRetry(() => import("./Pages/LoginCustomer"));
+const RegisterCustomer = lazyWithRetry(() => import("./Pages/RegisterCustomer"));
+const RegisterVendor = lazyWithRetry(() => import("./Pages/RegisterVendor"));
+const ContactUs = lazyWithRetry(() => import("./Pages/ContactUs"));
+const ProductDeatils = lazyWithRetry(() => import("./Pages/ProductDeatils"));
+const Merchant = lazyWithRetry(() => import("./Pages/Merchant/Merchant"));
+const MerchantDetail = lazyWithRetry(() =>
   import("./Pages/MerchantDetail/MerchantDetail")
 );
-const CheckoutTabs = lazy(() => import("./Pages/Checkout/CheckoutTabs"));
-const AboutUs = lazy(() => import("./Pages/AboutUs"));
-const PrivacyPolicy = lazy(() => import("./Pages/PrivacyPolicy"));
-const RequestProduct = lazy(() => import("./Pages/RequestProduct"));
+const CheckoutTabs = lazyWithRetry(() => import("./Pages/Checkout/CheckoutTabs"));
+const AboutUs = lazyWithRetry(() => import("./Pages/AboutUs"));
+const PrivacyPolicy = lazyWithRetry(() => import("./Pages/PrivacyPolicy"));
+const RequestProduct = lazyWithRetry(() => import("./Pages/RequestProduct"));
 
 function App() {
   return (
     <LoadingProvider>
       <Spinner />
       <CartProvider>
-        <Router>
-          <Suspense fallback={<Spinner />}>
+        <Router basename={window.location.pathname.startsWith("/dist") ? "/dist/" : "/"}>
+              <Suspense fallback={<Spinner />}>
             <Routes>
               <Route
                 path="/"
@@ -219,6 +224,10 @@ function App() {
                   </EmptyLayout>
                 }
               />
+
+
+              {/* Fallback route */}
+              <Route path="*" element={<MainLayout><Home /></MainLayout>} />
 
             </Routes>
           </Suspense>

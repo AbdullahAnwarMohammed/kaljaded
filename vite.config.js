@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import viteCompression from 'vite-plugin-compression';
 import { VitePWA } from 'vite-plugin-pwa';
+import { ViteImageOptimizer } from 'vite-plugin-image-optimizer';
 
 export default defineConfig({
   plugins: [
@@ -9,6 +10,12 @@ export default defineConfig({
     viteCompression({
       algorithm: 'gzip',
       ext: '.gz',
+    }),
+    ViteImageOptimizer({
+      png: { quality: 80 },
+      jpeg: { quality: 80 },
+      jpg: { quality: 80 },
+      webp: { lossless: true },
     }),
     VitePWA({
       registerType: 'autoUpdate',
@@ -18,6 +25,9 @@ export default defineConfig({
         short_name: 'Kaljaded',
         description: 'موقع كـالجديد - بيع وشراء الأجهزة المستعملة',
         theme_color: '#ffffff',
+        start_url: '/dist/',
+        scope: '/dist/',
+        display: 'standalone',
         icons: [
           {
             src: 'pwa-192x192.png',
@@ -39,7 +49,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-ui': ['react-icons', 'bootstrap'],
+          'vendor-icons': ['react-icons'],
           'vendor-utils': ['axios', 'i18next', 'react-i18next'],
         },
       },

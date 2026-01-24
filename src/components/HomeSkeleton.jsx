@@ -1,20 +1,22 @@
 import React from 'react';
 import './LazyImage/LazyImage.css'; // Ensure skeleton styles are available
 
-const HomeSkeleton = () => {
+const HomeSkeleton = ({ showCategories = true }) => {
     // 60px height for category items
     // 200px for sections
     return (
         <div className="container" style={{ padding: '20px 0' }}>
             {/* Category Skeleton */}
-            <div style={{ display: 'flex', gap: '15px', overflowX: 'auto', paddingBottom: '20px' }}>
-                {[1, 2, 3, 4, 5, 6].map(i => (
-                    <div key={i} style={{ minWidth: '80px', textAlign: 'center' }}>
-                        <div className="skeleton-loader" style={{ width: '60px', height: '60px', borderRadius: '50%', marginBottom: '10px' }}></div>
-                        <div className="skeleton-loader" style={{ width: '40px', height: '10px', margin: 'auto' }}></div>
-                    </div>
-                ))}
-            </div>
+            {showCategories && (
+                <div style={{ display: 'flex', gap: '15px', overflowX: 'auto', paddingBottom: '20px' }}>
+                    {[1, 2, 3, 4, 5, 6].map(i => (
+                        <div key={i} style={{ minWidth: '80px', textAlign: 'center' }}>
+                            <div className="skeleton-loader" style={{ width: '60px', height: '60px', borderRadius: '50%', marginBottom: '10px' }}></div>
+                            <div className="skeleton-loader" style={{ width: '40px', height: '10px', margin: 'auto' }}></div>
+                        </div>
+                    ))}
+                </div>
+            )}
 
             {/* Section Skeleton */}
             {[1, 2].map(s => (

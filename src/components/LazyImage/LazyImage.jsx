@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
 import './LazyImage.css';
 
-const LazyImage = ({ src, alt, className, style, onClick }) => {
-    const [isLoaded, setIsLoaded] = useState(false);
+const LazyImage = ({ src, alt, className, style, onClick, priority = false }) => {
+    const [isLoaded, setIsLoaded] = useState(priority);
 
     return (
         <div className={`lazy-image-container ${className || ''}`} style={style} onClick={onClick}>
-            {!isLoaded && <div className="skeleton-loader"></div>}
+            {(!isLoaded && !priority) && <div className="skeleton-loader"></div>}
             <img
                 src={src}
                 alt={alt}
-                className={`lazy-image ${isLoaded ? 'loaded' : ''}`}
+                className={`lazy-image ${isLoaded || priority ? 'loaded' : ''}`}
                 onLoad={() => setIsLoaded(true)}
-                loading="lazy"
+                loading={priority ? "eager" : "lazy"}
+                fetchPriority={priority ? "high" : "auto"}
+                style={priority ? { opacity: 1, transition: 'none' } : {}}
             />
         </div>
     );

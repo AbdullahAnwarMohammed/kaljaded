@@ -19,7 +19,7 @@ const ProductByCategory = ({ isInstallment = false }) => {
     const [lastPage, setLastPage] = useState(1);
     const [categories, setCategories] = useState([]);
 
-    const pathname = window.location.pathname;
+    const pathname = location.pathname;
     const isAllProducts = slug === 'all' || pathname === '/products';
 
     useEffect(() => {
