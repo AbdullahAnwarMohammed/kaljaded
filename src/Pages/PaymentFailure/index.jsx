@@ -1,10 +1,11 @@
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { FaTimesCircle } from "react-icons/fa";
 import "./PaymentFailure.css";
 
 const PaymentFailure = () => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
 
     return (
         <div className="payment-failure-container">
@@ -18,6 +19,15 @@ const PaymentFailure = () => {
                    <br/>
                    يرجى التأكد من بيانات البطاقة أو المحاولة مرة أخرى.
                 </p>
+
+                {/* Developer Error Display */}
+                {(searchParams.get('error') || searchParams.get('status')) && (
+                    <div style={{ marginTop: '20px', padding: '10px', backgroundColor: '#fff3f3', border: '1px solid red', borderRadius: '8px', fontSize: '14px', color: '#d32f2f' }}>
+                        <strong>Error Details (Dev):</strong> <br/>
+                        {searchParams.get('error') || ('Status: ' + searchParams.get('status'))}
+                    </div>
+                )}
+
                 <div className="actions">
                     <button 
                         className="btn-custom btn-secondary-custom"

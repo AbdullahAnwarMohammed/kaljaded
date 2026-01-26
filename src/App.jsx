@@ -93,9 +93,9 @@ function App() {
               <Route
                 path="/merchants/:id"
                 element={
-                  <MainLayout>
+                  <EmptyLayout>
                     <MerchantDetail />
-                  </MainLayout>
+                  </EmptyLayout>
                 }
               />
               {/** 🛒 صفحة السلة محمية */}
@@ -217,7 +217,7 @@ function App() {
               />
 
               <Route
-                path="/payment-failure"
+                path="/payment-failed"
                 element={
                   <EmptyLayout>
                     <PaymentFailure />

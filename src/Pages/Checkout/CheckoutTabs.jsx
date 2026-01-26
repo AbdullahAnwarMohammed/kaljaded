@@ -84,7 +84,7 @@ const CheckoutTabs = () => {
         // Fetch Payment Methods
         Api.get('/payment/myfatoorah/initiate')
             .then(res => {
-                console.log("MyFatoorah Initiate Response:", res.data); // Debug log
+                console.log("MyFatoorah Initiate Response:", res); // Debug log
                 if (res.data.success) {
                     setPaymentMethods(res.data.data.PaymentMethods);
                 } else {

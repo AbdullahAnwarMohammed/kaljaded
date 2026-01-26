@@ -11,6 +11,9 @@ use App\Models\User;
 use App\Traits\ApiResponseTrait;
 use App\Traits\ApiPaginationTrait;
 use Carbon\Carbon;
+use App\Models\Order;
+use App\Models\Review;
+use Illuminate\Support\Facades\Validator;
 
 class MerchantController extends Controller
 {
@@ -124,6 +127,134 @@ class MerchantController extends Controller
             );
         } catch (\Exception $e) {
             return $this->errorResponse('merchant.fetch_failed', 500);
+        }
+    }
+
+    public function sales($id)
+    {
+        try {
+            $count = Order::where('iduserinsert', $id)
+                ->where('typepay', '!=', 'delivery')
+                ->count();
+
+            return $this->successResponse(['count' => $count], 'sales.fetched_successfully');
+        } catch (\Exception $e) {
+            return $this->errorResponse('sales.fetch_failed', 500);
+        }
+    }
+
+    public function checkReviewEligibility(Request $request, $id)
+    {
+        try {
+            $user = auth()->user();
+            if (!$user) {
+                return $this->successResponse(['allowed' => false, 'message' => 'unauthenticated'], 'eligibility_checked');
+            }
+
+            // Check if already reviewed
+            $alreadyReviewed = Review::where('user_id', $user->id)
+                ->where('merchant_id', $id)
+                ->exists();
+
+            if ($alreadyReviewed) {
+                return $this->successResponse(['allowed' => false, 'message' => 'already_reviewed'], 'eligibility_checked');
+            }
+
+            // Check for any valid order regardless of time
+            $latestOrder = Order::where('userid', $user->id)
+                ->where('iduserinsert', $id)
+                ->where('typepay', '!=', 'delivery')
+                ->orderBy('date_receipt', 'desc') // Assuming date_receipt is the column
+                ->first();
+
+            if (!$latestOrder) {
+                 return $this->successResponse(['allowed' => false, 'message' => 'no_valid_purchase'], 'eligibility_checked');
+            }
+
+            // Check time constraint
+            $orderDate = Carbon::parse($latestOrder->date_receipt);
+            $now = Carbon::now('Africa/Cairo');
+            
+            // If order is less than 1 hour old
+            if ($orderDate->diffInMinutes($now) < 60) {
+                 $secondsPassed = $orderDate->diffInSeconds($now);
+                 $remainingSeconds = 3600 - $secondsPassed;
+                 
+                 // Ensure we don't return negative just in case
+                 if ($remainingSeconds > 0) {
+                     return $this->successResponse([
+                         'allowed' => false, 
+                         'message' => 'wait_for_cooldown', 
+                         'remaining_seconds' => $remainingSeconds
+                     ], 'eligibility_checked');
+                 }
+            }
+
+            return $this->successResponse(['allowed' => true, 'message' => 'allowed'], 'eligibility_checked');
+
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 500);
+        }
+    }
+
+    public function getReviews(Request $request, $id)
+    {
+        try {
+            $perPage = $request->get('per_page', 10);
+            $reviews = Review::where('merchant_id', $id)
+                ->with('user:id,name,image_vendor') // Assuming user has name/image
+                ->orderBy('created_at', 'desc')
+                ->paginate($perPage);
+
+            return $this->successResponse($reviews, 'reviews.fetched_successfully');
+        } catch (\Exception $e) {
+            return $this->errorResponse('reviews.fetch_failed', 500);
+        }
+    }
+
+    public function submitReview(Request $request, $id)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'rating' => 'required|integer|min:1|max:5',
+                'comment' => 'nullable|string|max:1000',
+                'order_id' => 'nullable|exists:orders,id'
+            ]);
+
+            if ($validator->fails()) {
+                return $this->errorResponse($validator->errors()->first(), 422);
+            }
+
+            $user = auth()->user();
+
+            // Re-check eligibility before submitting
+            $alreadyReviewed = Review::where('user_id', $user->id)->where('merchant_id', $id)->exists();
+            if ($alreadyReviewed) {
+                return $this->errorResponse('review.already_submitted', 400);
+            }
+
+            $hasValidOrder = Order::where('userid', $user->id)
+                ->where('iduserinsert', $id)
+                ->where('typepay', '!=', 'delivery')
+                ->where('date_receipt', '<=', Carbon::now('Africa/Cairo')->subHour())
+                ->exists();
+
+            if (!$hasValidOrder) {
+                return $this->errorResponse('review.not_eligible', 403);
+            }
+
+            $review = Review::create([
+                'user_id' => $user->id,
+                'merchant_id' => $id,
+                'rating' => $request->rating,
+                'comment' => $request->comment,
+                'order_id' => $request->order_id // Optional
+            ]);
+
+            return $this->successResponse($review, 'review.submitted_successfully');
+
+        } catch (\Exception $e) {
+            return $this->errorResponse('review.submission_failed', 500);
         }
     }
 }

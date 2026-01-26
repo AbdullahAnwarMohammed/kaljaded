@@ -2,8 +2,8 @@ import Api from "../Services/Api";
 import { getGuestToken } from "../utils/guestToken";
 
 // جلب السلة الحالية (Guest أو User)
-export const getCart = () => {
-  return Api.get("/cart");
+export const getCart = (config = {}) => {
+  return Api.get("/cart", config);
 };
 
 // إضافة منتج للسلة

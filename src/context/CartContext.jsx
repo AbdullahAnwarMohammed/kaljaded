@@ -14,7 +14,7 @@ export const CartProvider = ({ children }) => {
 
   const fetchCart = async () => {
     try {
-      const res = await getCart();
+      const res = await getCart({ skipLoader: true });
       if (res.data.success) {
         setCart(res.data.data.cart);
         setCartCount(calculateCount(res.data.data.cart));

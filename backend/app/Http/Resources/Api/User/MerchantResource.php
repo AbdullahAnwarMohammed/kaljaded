@@ -25,7 +25,8 @@ class MerchantResource extends JsonResource
             'image_commercial_Register_No' => $this->image_commercial_Register_No ? asset('storage/' . $this->image_commercial_Register_No) : null,
             'role'                       => $this->role,
             'price'                      => $this->price,
-            'rating'                     => $this->rating ?? 5,
+            'average_rating'             => round($this->receivedReviews()->avg('rating'), 1) ?? 0,
+            'reviews_count'              => $this->receivedReviews()->count(),
         ];
     }
 }

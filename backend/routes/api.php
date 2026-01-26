@@ -45,13 +45,20 @@ Route::middleware('SetLanguageFromHeader')->group(function () {
         Route::get('merchants/{slug}', [MerchantController::class, 'show']);
 
         Route::get("merchants", [MerchantController::class, 'index']);
+        Route::get("merchants/{id}/sales", [MerchantController::class, 'sales']);
+        Route::get("merchants/{id}/reviews", [MerchantController::class, 'getReviews']);
+        Route::middleware('auth:sanctum')->group(function () {
+             Route::get("merchants/{id}/review-eligibility", [MerchantController::class, 'checkReviewEligibility']);
+             Route::post("merchants/{id}/reviews", [MerchantController::class, 'submitReview']);
+        });
         Route::get("merchants/{slug}/products", [MerchantController::class, 'products']);
 
         Route::get("/banners", [BannerController::class, 'all']);
 
         Route::get('/products', [ProductController::class, 'index']);
         Route::get('/products/showBySlug/{slug}', [ProductController::class, 'showBySlug']);
-        Route::get('/products/{id}', [ProductController::class, 'show'])->where('id', '[0-9]+');
+                Route::get('/products/{id}', [ProductController::class, 'show'])->where('id', '[0-9]+');
+
         Route::get('/products/search', [ProductController::class, 'search']);
        Route::get('/products/installments/{slug?}', [ProductController::class, 'installments']);
 
@@ -82,7 +89,7 @@ Route::middleware('SetLanguageFromHeader')->group(function () {
         );
 
         Route::prefix('payment/deema')->group(function () {
-            Route::get('/success', [PaymentDemaController::class, 'success'])->name('deema.success');
+            Route::post('/success', [PaymentDemaController::class, 'success'])->name('deema.success');
             Route::get('/failure', [PaymentDemaController::class, 'failure'])->name('deema.failure');
             Route::get('/status', [PaymentDemaController::class, 'status']);
         });

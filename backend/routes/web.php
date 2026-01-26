@@ -31,6 +31,6 @@ Route::get('/update-db-images-main', function () {
 });
 
 
-Route::get('/{any}', function ($any = null) {
-    return file_get_contents(public_path('dist/index.html'));
-})->where('any', '.*');
+// Route::get('/{any}', function ($any = null) {
+//     return file_get_contents(public_path('dist/index.html'));
+// })->where('any', '.*');

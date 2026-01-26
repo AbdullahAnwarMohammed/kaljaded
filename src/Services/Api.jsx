@@ -43,7 +43,7 @@ Api.interceptors.request.use(
     const customerToken = localStorage.getItem("customer_token");
     const guestToken = getGuestToken();
 
-    if (customerToken) {
+    if (customerToken && customerToken !== "undefined" && customerToken !== "null") {
       config.headers["Authorization"] = `Bearer ${customerToken}`;
     }
     

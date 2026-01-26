@@ -57,7 +57,7 @@ const ProductDetails = () => {
   }, [id, slug]);
 
   // تحقق إذا المنتج موجود بالسلة
-  const cartItem = cart?.items?.find(item => item.product.id === product?.id);
+  const cartItem = cart?.items?.find(item => item.product?.id === product?.id);
 
   // إضافة المنتج للسلة
 
@@ -67,7 +67,7 @@ const ProductDetails = () => {
     setLoading(true);
     try {
       const latestCart = await fetchCart();
-      const existingItem = latestCart?.items?.find(item => item.product.id == product.id);
+      const existingItem = latestCart?.items?.find(item => item.product?.id == product.id);
 
       if (existingItem) {
         await updateCartItem(existingItem.id, existingItem.quantity + 1);
@@ -109,19 +109,30 @@ const ProductDetails = () => {
 
 const handleInstallClick = async () => {
   const token = localStorage.getItem("customer_token");
-    const customer = JSON.parse(localStorage.getItem("customer") || "{}");
-  if (!token) {
-    navigate("/login-customer");
-    return;
-  }
+    let customer = {};
+    try {
+        const storedCustomer = localStorage.getItem("customer");
+        if (storedCustomer && storedCustomer !== "undefined") {
+            customer = JSON.parse(storedCustomer);
+        }
+    } catch (e) {
+        console.error("Error parsing customer from localStorage", e);
+    }
+
+    const isValidToken = token && token !== "undefined" && token !== "null";
+
+    if (!isValidToken) {
+        navigate("/login-customer");
+        return;
+    }
 
   try {
     const res = await Api.post(
       "/payment/deema/checkout",
       {
         productid: product.id,
-        customer_name: customer.name,   // <-- add this
-        customer_phone: customer.phone, // <-- add this
+        customer_name: customer.name || "Customer",
+        customer_phone: customer.phone || "00000000",
       },
       {
         headers: {
@@ -210,7 +221,7 @@ const handleInstallClick = async () => {
             <div className="whatsapp">
               <Link 
                 className="whatsapp" 
-                to={`https://wa.me/?text=${encodeURIComponent(`${t("whatsapp_message_start")}\n*${product.name}*\n${window.location.origin}/product/${product.id}/${product.slug}`)}`}
+                to={product ? `https://wa.me/?text=${encodeURIComponent(`${t("whatsapp_message_start")}\n*${product.name}*\n${window.location.origin}/product/${product.id}/${product.slug}`)}` : "#"}
                 target="_blank"
               >
                 <FaWhatsapp />

@@ -12,14 +12,15 @@ const Welcome = () => {
     const [socials, setSocials] = useState({ whatsapp: "", tiktok: "", instgram: "" })
     useEffect(() => {
         Api.get("/settings").then(res => {
-            setSocials({
-                whatsapp: res.data.data.whatsapp,
-                tiktok: res.data.data.tiktok,
-                instgram: res.data.data.instgram
-            })
+            if (res.data?.data) {
+                setSocials({
+                    whatsapp: res.data.data.whatsapp || "",
+                    tiktok: res.data.data.tiktok || "",
+                    instgram: res.data.data.instgram || ""
+                });
+            }
         }).catch(err => console.error(err));
-
-    }, [])
+    }, []);
     return (
         <div className="component-welcome">
             <div className="container">

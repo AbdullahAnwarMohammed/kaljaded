@@ -81,8 +81,13 @@ const RegisterCustomer = () => {
 
             const response = await Api.post("/register", form);
 
-            localStorage.setItem("customer_token", response.data.token);
-            localStorage.setItem("customer", JSON.stringify(response.data.user));
+            // Correcting data access: response.data is { success: true, message: "...", data: { user: ..., token: ... } }
+            const apiData = response.data.data;
+
+            if (apiData) {
+                localStorage.setItem("customer_token", apiData.token);
+                localStorage.setItem("customer", JSON.stringify(apiData.user));
+            }
 
             navigate("/");
 
