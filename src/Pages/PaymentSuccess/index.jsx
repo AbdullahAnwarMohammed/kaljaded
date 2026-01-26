@@ -12,6 +12,7 @@ const PaymentSuccess = () => {
     const { fetchCart } = useCart();
     const [searchParams] = useSearchParams();
     const reference = searchParams.get("reference") || searchParams.get("order_reference");
+    const orderId = searchParams.get("order_id");
     
     const [status, setStatus] = useState("loading"); // loading, success, error
     const [message, setMessage] = useState("");
@@ -20,6 +21,14 @@ const PaymentSuccess = () => {
 
     useEffect(() => {
         const confirmPayment = async () => {
+            // Case 1: MyFatoorah - Backend already handled the order and redirected with order_id
+            if (orderId) {
+                setStatus("success");
+                fetchCart(); // Refresh cart
+                return;
+            }
+
+            // Case 2: Deema - Requires frontend to trigger confirmation
             if (hasCalled.current) return;
             hasCalled.current = true;
 
@@ -30,29 +39,25 @@ const PaymentSuccess = () => {
             }
 
             try {
-                // Call backend to confirm order
+                // Call backend to confirm order for Deema
                 const res = await Api.post('/payment/deema/success', { reference });
                 console.log(res);
-                // Even if "Order already created", it's a success for the user
                 if (res.status === 200 || res.data.message === 'Order already created') {
                     setStatus("success");
-                    fetchCart(); // Refresh cart (should be empty now)
+                    fetchCart();
                 } else {
                     setStatus("error");
                     setMessage(res.data.message || "Payment verification failed.");
                 }
             } catch (err) {
-                console.log(err);
                 console.error("Payment Confirmation Error:", err);
-                // If it fails with 410 (Already consumed cache) potentially ignore if we assume it was us?
-                // But better to just preventing double call which we did.
                 setStatus("error");
                 setMessage(err.response?.data?.message || "An error occurred while verifying payment.");
             }
         };
 
         confirmPayment();
-    }, [reference, fetchCart]);
+    }, [reference, orderId, fetchCart]);
 
     return (
         <div className="payment-success-container">

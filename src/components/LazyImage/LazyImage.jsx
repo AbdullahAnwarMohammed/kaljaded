@@ -15,6 +15,7 @@ const LazyImage = ({ src, alt, className, style, onClick, priority = false }) =>
                 loading={priority ? "eager" : "lazy"}
                 fetchPriority={priority ? "high" : "auto"}
                 style={priority ? { opacity: 1, transition: 'none' } : {}}
+                decoding="async"
             />
         </div>
     );

@@ -11,6 +11,10 @@ export default defineConfig({
       algorithm: 'gzip',
       ext: '.gz',
     }),
+    viteCompression({
+      algorithm: 'brotliCompress',
+      ext: '.br',
+    }),
     ViteImageOptimizer({
       png: { quality: 80 },
       jpeg: { quality: 80 },
@@ -43,14 +47,14 @@ export default defineConfig({
       }
     })
   ],
-  base: '/dist/', // <--- مهم جدًا لو هتحط build في public/dist
+  // base: '/dist/', // <--- مهم جدًا لو هتحط build في public/dist
   build: {
     rollupOptions: {
       output: {
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-icons': ['react-icons'],
-          'vendor-utils': ['axios', 'i18next', 'react-i18next'],
+          'vendor-ui': ['react-icons', 'react-select', 'react-dropzone', 'react-slick', 'swiper'],
+          'vendor-utils': ['axios', 'i18next', 'react-i18next', 'uuid'],
         },
       },
     },

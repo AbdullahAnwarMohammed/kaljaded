@@ -9,7 +9,7 @@ use App\Services\DeemaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
+
 
 class PaymentDemaController extends Controller
 {
@@ -35,7 +35,7 @@ class PaymentDemaController extends Controller
 
         $product = Product::findOrFail($request->productid);
         $amount = $product->price;
-        $merchantOrderId = 'ORD-' . Str::uuid();
+        $merchantOrderId = 'ORD-' . $product->id;
 
         Cache::put(
             'deema_order_' . $merchantOrderId,
@@ -129,6 +129,7 @@ class PaymentDemaController extends Controller
 
                 'totalprice'           => $product->price,
                 'typepay'              => 'installment',
+                'order_source'         => 'Web',
                 'status'               => 1,
                 'date_receipt'         => now(),
                 'merchant_order_id'    => $merchantOrderId,
@@ -193,6 +194,7 @@ class PaymentDemaController extends Controller
         // Cleanup Cache
         Cache::forget('deema_order_' . $reference);
         Cache::forget('deema_order_' . $merchantOrderId);
+        $product->delete();
 
         return response()->json([
             'message' => 'Payment success & order created',

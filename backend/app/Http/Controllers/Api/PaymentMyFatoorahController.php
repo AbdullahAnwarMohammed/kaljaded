@@ -57,6 +57,7 @@ class PaymentMyFatoorahController extends Controller
                 default => 'myfatoorah'
             };
         }   
+      $merchantOrderId = 'ORD-' . Str::uuid();
 
         // Handle COD immediately (no change needed essentially, but we can clean it up)
         if ($paymentMethod === 'cod') {
@@ -69,27 +70,76 @@ class PaymentMyFatoorahController extends Controller
                 I will include the DB transaction for COD only here to maintain existing functionality.
              */
              DB::beginTransaction();
+
              try {
                 $createdOrderIds = [];
+
                 foreach ($cart->items as $item) {
                     $product = $item->product;
                     if (!$product) continue;
                     $order = Order::create([
-                        'productid'    => $product->id,
-                        'userid'       => $user->id,
-                        'totalprice'   => $item->price * $item->quantity,
-                        'typepay'      => 'delivery',
-                        'status'       => 1, // COD is active immediately
-                        'date_receipt' => now(),
-                        'username'     => $request->name ?? $user->name,
-                        'userphone'    => $request->phone ?? $user->phone,
-                        'useraddress'  => "City: " . ($request->cityName ?? $user->city_id) . ", Area: " . ($request->areaName ?? $user->area_id),
-                        // ... populate other fields as needed ...
-                        'name'         => $product->name,
-                        'nameen'       => $product->name_en,
-                        'price'        => $product->price,
-                        // ...
-                        'note'         => "Cart-" . $cart->id . "-" . time(),
+                        'merchant_order_id'          => $merchantOrderId,
+                        'productid'                  => $product->id,
+                        'userid'                     => $user->id,
+                        'username'                   => $request->name ?? $user->name,
+                        'userphone'                  => $request->phone ?? $user->phone,
+                        'latitude'                   => $request->latitude ?? $user->latitude,
+                        'longitude'                  => $request->longitude ?? $user->longitude,
+                        'useraddress'                => "City: " . ($request->cityName ?? $user->city_id) . ", Area: " . ($request->areaName ?? $user->area_id),
+                        'totalprice'                 => $item->price * $item->quantity,
+                        'typepay'                    => 'delivery',
+                        'order_source'               => 'Web',
+                        'status'                     => 1, // COD is active immediately
+                        'date_receipt'               => now(),
+                        'name'                       => $product->name,
+                        'nameen'                     => $product->name_en,
+                        'isactive'                   => $product->isactive,
+                        'description'                => $product->description,
+                        'descriptionen'              => $product->description_en,
+                        'price'                      => $product->price,
+                        'price_old'                  => $product->price_old,
+                        'price_sale'                 => $product->price_sale,
+                        'price_active'               => $product->price_active,
+                        'sub_sub_category_id'        => $product->sub_sub_category_id,
+                        'category_id'                => $product->category_id,
+                        'sub_category_id'            => $product->sub_category_id,
+                        'rating'                     => $product->rating,
+                        'view'                       => $product->view,
+                        'images'                     => $product->images,
+                        'date'                       => $product->date,
+                        'userinsert'                 => $product->userinsert,
+                        'iduserinsert'               => $product->iduserinsert,
+                        'iduserupdate'               => $product->iduserupdate,
+                        'barcode'                    => $product->barcode,
+                        'number'                     => $product->number,
+                        'serialnumber'               => $product->serialnumber,
+                        'memorysize'                 => $product->memorysize,
+                        'ramsize'                    => $product->ramsize,
+                        'colorar'                    => $product->colorar,
+                        'coloren'                    => $product->coloren,
+                        'device_status'              => $product->device_status,
+                        'device_clean'               => $product->device_clean,
+                        'device_body'                => $product->device_body,
+                        'device_display'             => $product->device_display,
+                        'device_button'              => $product->device_button,
+                        'device_camera'              => $product->device_camera,
+                        'device_wifi_blu'            => $product->device_wifi_blu,
+                        'device_battery'             => $product->device_battery,
+                        'device_fingerprint'         => $product->device_fingerprint,
+                        'device_speaker'             => $product->device_speaker,
+                        'device_box'                 => $product->device_box,
+                        'note'                       => "Cart-" . $cart->id . "-" . time(),
+                        'gift'                       => $product->gift,
+                        'customer_name'              => $request->name ?? $user->name,
+                        'customer_phone'             => $request->phone ?? $user->phone,
+                        'customer_price'             => $product->customer_price,
+                        'customer_approved'          => $product->customer_approved,
+                        'customer_approved_name'     => $product->customer_approved_name,
+                        'vender_money_received'      => $product->vender_money_received,
+                        'vender_money_received_name' => $product->vender_money_received_name,
+                        'product_active_new'         => $product->product_active_new,
+                        'fast_by'                    => $product->fast_by,
+                        'slug'                       => $product->slug,
                     ]);
                     $createdOrderIds[] = $order->id;
                 }
@@ -104,7 +154,6 @@ class PaymentMyFatoorahController extends Controller
 
         // --- MyFatoorah Online Payment Refactor ---
 
-        $merchantOrderId = 'ORD-' . Str::uuid();
 
         // Prepare Cache Data
         $cacheData = [
@@ -241,32 +290,68 @@ class PaymentMyFatoorahController extends Controller
                 if (!$product) continue;
 
                 $order = Order::create([
-                    'productid'         => $product->id,
-                    'userid'            => $cacheData['user_id'],
-                    'username'          => $cacheData['customer_name'],
-                    'userphone'         => $cacheData['customer_phone'],
-                    'useraddress'       => $cacheData['user_address_str'],
-                    'latitude'          => $cacheData['latitude'],
-                    'longitude'         => $cacheData['longitude'],
-                    
-                    'totalprice'        => $itemData['price'] * $itemData['quantity'],
-                    'typepay'           => $cacheData['type_pay'],
-                    'status'            => 1, // PAID
-                    'date_receipt'      => now(),
-                    'merchant_order_id' => $merchantOrderId,
-                    'note'              => $orderNote,
-
-                    // Product Snapshot
-                    'name'              => $product->name,
-                    'nameen'            => $product->name_en,
-                    'description'       => $product->description,
-                    'descriptionen'     => $product->description_en,
-                    'price'             => $product->price,
-                    // ... Need to map all other fields as expected by schema ...
-                    'images'            => $product->images,
-                    'barcode'           => $product->barcode,
-                    'isactive'          => $product->active ?? 1,
-                    // Just filling minimal criticals for brevity, add others as per schema requirements
+                    'merchant_order_id'          => $merchantOrderId,
+                    'productid'                  => $product->id,
+                    'userid'                     => $cacheData['user_id'],
+                    'username'                   => $cacheData['customer_name'],
+                    'userphone'                  => $cacheData['customer_phone'],
+                    'latitude'                   => $cacheData['latitude'],
+                    'longitude'                  => $cacheData['longitude'],
+                    'useraddress'                => $cacheData['user_address_str'],
+                    'totalprice'                 => $itemData['price'] * $itemData['quantity'],
+                    'typepay'                    => $cacheData['type_pay'],
+                    'order_source'               => 'Web',
+                    'status'                     => 1, // PAID
+                    'date_receipt'               => now(),
+                    'name'                       => $product->name,
+                    'nameen'                     => $product->nameen,
+                    'isactive'                   => $product->isactive,
+                    'description'                => $product->description,
+                    'descriptionen'              => $product->descriptionen,
+                    'price'                      => $product->price,
+                    'price_old'                  => $product->price_old,
+                    'price_sale'                 => $product->price_sale,
+                    'price_active'               => $product->price_active,
+                    'sub_sub_category_id'        => $product->sub_sub_category_id,
+                    'category_id'                => $product->category_id,
+                    'sub_category_id'            => $product->sub_category_id,
+                    'rating'                     => $product->rating,
+                    'view'                       => $product->view,
+                    'images'                     => $product->images,
+                    'date'                       => $product->date,
+                    'userinsert'                 => $product->userinsert,
+                    'iduserinsert'               => $product->iduserinsert,
+                    'iduserupdate'               => $product->iduserupdate,
+                    'barcode'                    => $product->barcode,
+                    'number'                     => $product->number,
+                    'serialnumber'               => $product->serialnumber,
+                    'memorysize'                 => $product->memorysize,
+                    'ramsize'                    => $product->ramsize,
+                    'colorar'                    => $product->colorar,
+                    'coloren'                    => $product->coloren,
+                    'device_status'              => $product->device_status,
+                    'device_clean'               => $product->device_clean,
+                    'device_body'                => $product->device_body,
+                    'device_display'             => $product->device_display,
+                    'device_button'              => $product->device_button,
+                    'device_camera'              => $product->device_camera,
+                    'device_wifi_blu'            => $product->device_wifi_blu,
+                    'device_battery'             => $product->device_battery,
+                    'device_fingerprint'         => $product->device_fingerprint,
+                    'device_speaker'             => $product->device_speaker,
+                    'device_box'                 => $product->device_box,
+                    'note'                       => $orderNote, // System Note with Cart ID
+                    'gift'                       => $product->gift,
+                    'customer_name'              => $cacheData['customer_name'],
+                    'customer_phone'             => $cacheData['customer_phone'],
+                    'customer_price'             => $product->customer_price,
+                    'customer_approved'          => $product->customer_approved,
+                    'customer_approved_name'     => $product->customer_approved_name,
+                    'vender_money_received'      => $product->vender_money_received,
+                    'vender_money_received_name' => $product->vender_money_received_name,
+                    'product_active_new'         => $product->product_active_new,
+                    'fast_by'                    => $product->fast_by,
+                    'slug'                       => $product->slug,
                 ]);
 
                 if (!$createdFirstId) $createdFirstId = $order->id;
@@ -279,7 +364,7 @@ class PaymentMyFatoorahController extends Controller
 
             // Clear Cache
             \Illuminate\Support\Facades\Cache::forget('myfatoorah_order_' . $merchantOrderId);
-
+            $product->delete();
             return redirect()->away("$frontendUrl/payment-success?order_id=" . $createdFirstId);
 
         } catch (\Exception $e) {
