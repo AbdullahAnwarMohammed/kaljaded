@@ -15,8 +15,11 @@ const Home = () => {
 
     const navigate = useNavigate();
 
-    const [sections, setSections] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [sections, setSections] = useState(() => {
+        const saved = localStorage.getItem("home_sections");
+        return saved ? JSON.parse(saved) : [];
+    });
+    const [loading, setLoading] = useState(sections.length === 0);
 
     useEffect(() => {
         
@@ -25,6 +28,7 @@ const Home = () => {
                 const res = await Api.get("/categories-with-products", { cache: true, skipLoader: true });
                 if (res.data.success) {
                     setSections(res.data.data);
+                    localStorage.setItem("home_sections", JSON.stringify(res.data.data));
                 }
             } catch (err) {
                 console.error("Failed to fetch home data:", err);

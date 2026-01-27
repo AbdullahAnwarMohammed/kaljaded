@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import viteCompression from 'vite-plugin-compression';
 import { VitePWA } from 'vite-plugin-pwa';
 import { ViteImageOptimizer } from 'vite-plugin-image-optimizer';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineConfig({
   plugins: [
@@ -45,15 +46,21 @@ export default defineConfig({
           }
         ]
       }
+    }),
+    visualizer({
+      open: false,
+      gzipSize: true,
+      brotliSize: true,
+      filename: 'stats.html',
     })
   ],
-  // base: '/dist/', // <--- مهم جدًا لو هتحط build في public/dist
+  base: '/dist/', // <--- مهم جدًا لو هتحط build في public/dist
   build: {
     rollupOptions: {
       output: {
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-ui': ['react-icons', 'react-select', 'react-dropzone', 'react-slick', 'swiper'],
+          'vendor-ui': ['react-icons', 'react-select', 'react-dropzone', 'swiper'],
           'vendor-utils': ['axios', 'i18next', 'react-i18next', 'uuid'],
         },
       },

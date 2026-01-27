@@ -9,17 +9,29 @@ import "./Welcome.css";
 import Api from '../../Services/Api';
 const Welcome = () => {
     const { t } = useTranslation();
-    const [socials, setSocials] = useState({ whatsapp: "", tiktok: "", instgram: "" })
+    const [socials, setSocials] = useState(() => {
+        const saved = localStorage.getItem("site_settings");
+        return saved ? JSON.parse(saved) : { whatsapp: "", tiktok: "", instgram: "" };
+    });
+
     useEffect(() => {
-        Api.get("/settings").then(res => {
-            if (res.data?.data) {
-                setSocials({
-                    whatsapp: res.data.data.whatsapp || "",
-                    tiktok: res.data.data.tiktok || "",
-                    instgram: res.data.data.instgram || ""
-                });
+        const fetchSettings = async () => {
+            try {
+                const res = await Api.get("/settings", { cache: true, skipLoader: true });
+                if (res.data?.data) {
+                    const data = {
+                        whatsapp: res.data.data.whatsapp || "",
+                        tiktok: res.data.data.tiktok || "",
+                        instgram: res.data.data.instgram || ""
+                    };
+                    setSocials(data);
+                    localStorage.setItem("site_settings", JSON.stringify(data));
+                }
+            } catch (err) {
+                console.error(err);
             }
-        }).catch(err => console.error(err));
+        };
+        fetchSettings();
     }, []);
     return (
         <div className="component-welcome">

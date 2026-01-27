@@ -289,7 +289,7 @@ const handleInstallClick = async () => {
             <h2 className="price">{product.price}<span className="unit">K.D</span></h2>
           </header>
 
-          <div className="payment">
+          {/* <div className="payment">
             <div onClick={handleInstallClick} >{t("install_with_deema")} <img src={deema_image} width={40} alt="" /></div>
 
             {!cartItem ? (
@@ -309,7 +309,7 @@ const handleInstallClick = async () => {
                 {t("product_added")}
               </button>
             )}
-          </div>
+          </div> */}
 
           <h3>{t("payment_secured")} <RiSecurePaymentLine /></h3>
         </div>

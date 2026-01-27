@@ -7,7 +7,7 @@ import GuestRoute from "./routes/GuestRoute";
 import PaymentSuccess from "./Pages/PaymentSuccess";
 import PaymentFailure from "./Pages/PaymentFailure";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap/dist/js/bootstrap.bundle.min.js";
+// import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "./App.css";
 // Fix for lazy loading CSS issue
 import "./Pages/ProductByCategory.css";

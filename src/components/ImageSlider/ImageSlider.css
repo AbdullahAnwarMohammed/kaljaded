@@ -90,11 +90,32 @@
 }
 
 @media (max-width: 576px) {
-  .image-slider img {
+  .image-slider img,
+  .skeleton-banner {
     width: 100%;
     height: auto;
     aspect-ratio: 16 / 9; /* Reserve space to prevent CLS */
     object-fit: cover;
+  }
+}
+
+.skeleton-banner {
+  width: 100%;
+  height: 700px; /* Match the desktop image height */
+  background: #e0e0e0;
+  border-radius: 11px;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0.6;
   }
 }
 

@@ -26,22 +26,30 @@ const Merchant = () => {
     const [loading, setLoading] = useState(false);
     const [hasMore, setHasMore] = useState(true);
 
-    const [cities, setCities] = useState([]);
-    const [selectedCity, setSelectedCity] = useState(null);
-
     // Search State
     const [search, setSearch] = useState("");
     const debouncedSearch = useDebounce(search, 500);
 
+    const [cities, setCities] = useState(() => {
+        const saved = localStorage.getItem("site_cities");
+        return saved ? JSON.parse(saved) : [];
+    });
+    const [selectedCity, setSelectedCity] = useState(null);
+
     // Fetch Cities
     useEffect(() => {
-        Api.get('/cities')
-            .then(res => {
+        const fetchCities = async () => {
+            try {
+                const res = await Api.get('/cities', { cache: true, skipLoader: true });
                 if(res.data.success) {
                     setCities(res.data.data);
+                    localStorage.setItem("site_cities", JSON.stringify(res.data.data));
                 }
-            })
-            .catch(err => console.error("Error fetching cities:", err));
+            } catch (err) {
+                console.error("Error fetching cities:", err);
+            }
+        };
+        fetchCities();
     }, []);
 
     const fetchMerchants = async (pageNumber, searchQuery, reset = false) => {
@@ -58,7 +66,12 @@ const Merchant = () => {
             if (searchQuery) params.search = searchQuery;
             if (selectedCity) params.city_id = selectedCity;
 
-            const res = await Api.get("/merchants", { params });
+            // Use skipLoader if we already have merchants or if it's not the very first page of all
+            const res = await Api.get("/merchants", { 
+                params, 
+                skipLoader: merchants.length > 0 || pageNumber > 1,
+                cache: pageNumber === 1 && !searchQuery && !selectedCity 
+            });
 
             if (res.data.success) {
                 const newMerchants = res.data.data.data;

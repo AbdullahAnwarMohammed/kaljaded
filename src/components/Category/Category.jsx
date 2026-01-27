@@ -5,8 +5,11 @@ import Api from "../../Services/Api"; // axios instance
 import LazyImage from '../LazyImage/LazyImage';
 
 const Category = () => {
-    const [categories, setCategories] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [categories, setCategories] = useState(() => {
+        const saved = localStorage.getItem("home_categories");
+        return saved ? JSON.parse(saved) : [];
+    });
+    const [loading, setLoading] = useState(categories.length === 0);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -15,6 +18,7 @@ const Category = () => {
                 const res = await Api.get("/categories", { cache: true, skipLoader: true }); 
                 if (res.data.success) {
                     setCategories(res.data.data);
+                    localStorage.setItem("home_categories", JSON.stringify(res.data.data));
                 }
             } catch (err) {
                 console.error("Failed to fetch categories:", err);

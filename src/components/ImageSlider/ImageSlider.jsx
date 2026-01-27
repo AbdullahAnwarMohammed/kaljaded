@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from "react";
-import Slider from "react-slick";
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/autoplay";
+
 import Api from "../../Services/Api"; // axios instance
 import LazyImage from "../LazyImage/LazyImage"; // Import LazyImage
 
 import "./ImageSlider.css";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
-
 
 const ImageSlider = () => {
-    const [banners, setBanners] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [banners, setBanners] = useState(() => {
+        const saved = localStorage.getItem("home_banners");
+        return saved ? JSON.parse(saved) : [];
+    });
+    const [loading, setLoading] = useState(banners.length === 0);
     const [showPopup, setShowPopup] = useState(false);
     const [popupContent, setPopupContent] = useState(null);
 
@@ -21,6 +24,7 @@ const ImageSlider = () => {
                 const res = await Api.get("/banners", { cache: true, skipLoader: true });
                 if (res.data.success) {
                     setBanners(res.data.data);
+                    localStorage.setItem("home_banners", JSON.stringify(res.data.data));
                 }
             } catch (err) {
                 console.error("Failed to fetch banners:", err);
@@ -33,8 +37,8 @@ const ImageSlider = () => {
 
     if (loading) {
         return (
-            <div className="image-slider" style={{ width: "100%", margin: "auto", padding: "10px", position: "relative" }}>
-                 <div className="skeleton-loader" style={{ width: '100%', height: 'auto', aspectRatio: '16/9', borderRadius: '11px' }}></div>
+            <div className="image-slider">
+                 <div className="skeleton-banner"></div>
             </div>
         );
     }
@@ -44,39 +48,41 @@ const ImageSlider = () => {
         setShowPopup(true);
     };
     const closePopup = () => setShowPopup(false);
-    const settings = {
-        infinite: true,
-        speed: 1100,          // وقت الانتقال
-        slidesToShow: 1,
-        slidesToScroll: 1,
-        autoplay: true,
-        autoplaySpeed: 3500,  // وقت العرض
-        cssEase: "cubic-bezier(0.77, 0, 0.175, 1)",
-    };
-
 
     return (
         <>
             <div className="image-slider" style={{ width: "100%", margin: "auto" }}>
-                <Slider {...settings}>
+                <Swiper
+                    modules={[Autoplay]}
+                    spaceBetween={0}
+                    slidesPerView={1}
+                    loop={true}
+                    autoplay={{
+                        delay: 3500,
+                        disableOnInteraction: false,
+                    }}
+                    speed={1100}
+                    className="mySwiper"
+                >
                     {banners.map((item, index) => (
-                        <div key={item.id} className="app-image-slider" style={{ position: "relative" }}>
-                            <LazyImage
-                                src={item.image}
-                                alt={item.title}
-                                className="slider-image" // Add a class for specific slider styling if needed
-                                style={{ width: '100%', height: '100%' }}
-                                priority={index === 0}
-                            />
-                            <div
-                            >
-                                <button className="button" onClick={() => openPopup(item)}>
-                                    عرض المزيد
-                                </button>
+                        <SwiperSlide key={item.id}>
+                            <div className="app-image-slider" style={{ position: "relative" }}>
+                                <LazyImage
+                                    src={item.image}
+                                    alt={item.title}
+                                    className="slider-image" // Add a class for specific slider styling if needed
+                                    style={{ width: '100%', height: '100%' }}
+                                    priority={index === 0}
+                                />
+                                <div>
+                                    <button className="button" onClick={() => openPopup(item)}>
+                                        عرض المزيد
+                                    </button>
+                                </div>
                             </div>
-                        </div>
+                        </SwiperSlide>
                     ))}
-                </Slider>
+                </Swiper>
             </div>
 
             {showPopup && (

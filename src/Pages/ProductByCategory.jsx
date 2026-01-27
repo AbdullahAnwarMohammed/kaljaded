@@ -23,27 +23,57 @@ const ProductByCategory = ({ isInstallment = false }) => {
     const isAllProducts = slug === 'all' || pathname === '/products';
 
     useEffect(() => {
-        setProducts([]);
-        setCurrentPage(1);
-    }, [slug, pathname, location.search]);
+        const cacheKey = `products_${slug || 'all'}_${subSlug || ''}_${isInstallment}`;
+        const cached = localStorage.getItem(cacheKey);
+        
+        if (cached) {
+            const data = JSON.parse(cached);
+            setProducts(data.products);
+            setCategory(data.category);
+            setLastPage(data.lastPage);
+        } else {
+            setProducts([]);
+            setCategory(null);
+        }
 
-    // جلب البيانات
-    useEffect(() => { fetchProducts(currentPage); }, [currentPage, slug, pathname, location.search, isInstallment]);
+        if (currentPage === 1) {
+            fetchProducts(1);
+        } else {
+            // This will trigger the reset, but we also need to fetch the new category's page 1
+            setCurrentPage(1);
+            fetchProducts(1);
+        }
+    }, [slug, pathname, location.search, isInstallment]);
+
+    useEffect(() => {
+        if (currentPage > 1) {
+            fetchProducts(currentPage);
+        }
+    }, [currentPage]);
 
     useEffect(() => { fetchCategories(); }, []);
 
     const fetchCategories = async () => {
         try {
-            const res = await Api.get("/categories");
-            setCategories(res.data.data);
+            // Try to load from localStorage first for instant UI
+            const cachedCats = localStorage.getItem('all_categories');
+            if (cachedCats) {
+                setCategories(JSON.parse(cachedCats));
+            }
+
+            const res = await Api.get("/categories", { cache: true });
+            const data = res.data.data;
+            setCategories(data);
+            localStorage.setItem('all_categories', JSON.stringify(data));
         } catch (err) { console.error(err); }
     };
 
 
-    const fetchProducts = async (page) => {
+    const fetchProducts = async (page, isInitial = false) => {
         if (loading && page > 1) return;
+        
         try {
-            setLoading(true);
+            setLoading(true); 
             let url = '';
 
             if (isInstallment) {
@@ -56,26 +86,43 @@ const ProductByCategory = ({ isInstallment = false }) => {
                 if (subSlug) url += `&sub=${subSlug}`;
             }
 
-            const res = await Api.get(url);
+             const hasCached = products.length > 0 && page === 1;
+             // Use global API cache for first page to make it near-instant if visited before
+             const res = await Api.get(url, { 
+                 skipLoader: hasCached,
+                 cache: page === 1 
+             });
+
             const { category: catData, products: newProducts, meta } = res.data.data;
 
-            // ضبط العنوان
-            if (isInstallment) setCategory({ name: 'الأقساط', subcategories: catData?.subcategories || [] });
-            else if (!isAllProducts) setCategory(catData);
-            else setCategory({ name: 'كل المنتجات' });
+            let newCategoryData = null;
+            if (isInstallment) newCategoryData = { name: 'الأقساط', subcategories: catData?.subcategories || [] };
+            else if (!isAllProducts) newCategoryData = catData;
+            else newCategoryData = { name: 'كل المنتجات' };
 
+            setCategory(newCategoryData);
             setLastPage(meta.last_page);
 
+            if (page === 1) {
+                 const cacheKey = `products_${slug || 'all'}_${subSlug || ''}_${isInstallment}`;
+                 localStorage.setItem(cacheKey, JSON.stringify({
+                     products: newProducts,
+                     category: newCategoryData,
+                     lastPage: meta.last_page
+                 }));
+            }
+
             setProducts(prev => {
-                //If page 1, reset completely to avoid mixing old data if state wasn't cleared fast enough
                 if (page === 1) return newProducts;
-                
                 const productMap = new Map(prev.map(p => [p.id, p]));
                 newProducts.forEach(p => productMap.set(p.id, p));
                 return Array.from(productMap.values());
             });
-        } catch (err) { console.error(err); }
-        finally { setLoading(false); }
+        } catch (err) { 
+            console.error(err); 
+        } finally { 
+            setLoading(false); 
+        }
     };
 
     // Infinite scroll
@@ -151,8 +198,8 @@ const ProductByCategory = ({ isInstallment = false }) => {
                         <ProductCard key={product.id} p={product} />
                     ))}
                     
-                    {/* عرض Skeletons أثناء التحميل */}
-                    {loading && Array.from({ length: 4 }).map((_, idx) => (
+                    {/* عرض Skeletons أثناء التحميل إذا لم يكن هناك منتجات أو تحميل صفحة جديدة */}
+                    {loading && (products.length === 0 || currentPage > 1) && Array.from({ length: 4 }).map((_, idx) => (
                         <ProductCardSkeleton key={`skeleton-${idx}`} />
                     ))}
                 </div>
