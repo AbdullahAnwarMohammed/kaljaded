@@ -1,12 +1,19 @@
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { RiArrowRightLine } from "react-icons/ri";
-import { useEffect, useState } from "react";
+import { FaWhatsapp } from "react-icons/fa";
+import { BsBoxSeam } from "react-icons/bs";
+import { useEffect, useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
+
 import ProductCard from '../components/CategorySection/ProductCard';
 import ProductCardSkeleton from '../components/CategorySection/ProductCardSkeleton';
 import "./ProductByCategory.css";
+import "./RequestProduct.css";
 import Api from '../Services/Api';
 
 const ProductByCategory = ({ isInstallment = false }) => {
+        const { t, i18n } = useTranslation();
+    
     const { slug } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
@@ -19,8 +26,12 @@ const ProductByCategory = ({ isInstallment = false }) => {
     const [lastPage, setLastPage] = useState(1);
     const [categories, setCategories] = useState([]);
 
+    const [hasInitialLoaded, setHasInitialLoaded] = useState(false);
+
     const pathname = location.pathname;
     const isAllProducts = slug === 'all' || pathname === '/products';
+
+    const fetchedSlugs = useRef(new Set());
 
     useEffect(() => {
         const cacheKey = `products_${slug || 'all'}_${subSlug || ''}_${isInstallment}`;
@@ -31,17 +42,27 @@ const ProductByCategory = ({ isInstallment = false }) => {
             setProducts(data.products);
             setCategory(data.category);
             setLastPage(data.lastPage);
+            setHasInitialLoaded(true);
         } else {
             setProducts([]);
             setCategory(null);
+            setHasInitialLoaded(false);
         }
 
-        if (currentPage === 1) {
-            fetchProducts(1);
+        const currentSlugKey = `${slug || 'all'}_${subSlug || ''}_${isInstallment}`;
+        // If we haven't fetched this slug in this session, or if it's the first load
+        if (!fetchedSlugs.current.has(currentSlugKey)) {
+            if (currentPage === 1) {
+                fetchProducts(1);
+            } else {
+                setCurrentPage(1);
+                fetchProducts(1);
+            }
+            fetchedSlugs.current.add(currentSlugKey);
         } else {
-            // This will trigger the reset, but we also need to fetch the new category's page 1
-            setCurrentPage(1);
-            fetchProducts(1);
+            // Already fetched in this session, just ensure we are on page 1
+            if (currentPage !== 1) setCurrentPage(1);
+            setHasInitialLoaded(true);
         }
     }, [slug, pathname, location.search, isInstallment]);
 
@@ -55,13 +76,10 @@ const ProductByCategory = ({ isInstallment = false }) => {
 
     const fetchCategories = async () => {
         try {
-            // Try to load from localStorage first for instant UI
             const cachedCats = localStorage.getItem('all_categories');
-            if (cachedCats) {
-                setCategories(JSON.parse(cachedCats));
-            }
+            if (cachedCats) setCategories(JSON.parse(cachedCats));
 
-            const res = await Api.get("/categories", { cache: true });
+            const res = await Api.get("/categories", { cache: true, skipLoader: true });
             const data = res.data.data;
             setCategories(data);
             localStorage.setItem('all_categories', JSON.stringify(data));
@@ -69,13 +87,15 @@ const ProductByCategory = ({ isInstallment = false }) => {
     };
 
 
-    const fetchProducts = async (page, isInitial = false) => {
+    const fetchProducts = async (page) => {
         if (loading && page > 1) return;
         
         try {
-            setLoading(true); 
-            let url = '';
+            // Only show loader if we don't have products (first time for this slug)
+            const hasData = products.length > 0 && page === 1;
+            setLoading(!hasData); 
 
+            let url = '';
             if (isInstallment) {
                 url = `/categories/products/active/${slug || ''}?page=${page}`;
                 if (subSlug) url += `&sub=${subSlug}`;
@@ -86,10 +106,8 @@ const ProductByCategory = ({ isInstallment = false }) => {
                 if (subSlug) url += `&sub=${subSlug}`;
             }
 
-             const hasCached = products.length > 0 && page === 1;
-             // Use global API cache for first page to make it near-instant if visited before
              const res = await Api.get(url, { 
-                 skipLoader: hasCached,
+                 skipLoader: true, // Handle locally for smoother tab switching
                  cache: page === 1 
              });
 
@@ -122,6 +140,7 @@ const ProductByCategory = ({ isInstallment = false }) => {
             console.error(err); 
         } finally { 
             setLoading(false); 
+            setHasInitialLoaded(true);
         }
     };
 
@@ -137,7 +156,7 @@ const ProductByCategory = ({ isInstallment = false }) => {
         return () => window.removeEventListener("scroll", handleScroll);
     }, [loading, currentPage, lastPage]);
 
-    if (!isAllProducts && slug && !category && !loading) {
+    if (!isAllProducts && slug && !category && hasInitialLoaded && !loading) {
         return <p className="text-center mt-5">لا يوجد قسم بهذا الاسم</p>;
     }
 
@@ -205,8 +224,21 @@ const ProductByCategory = ({ isInstallment = false }) => {
                 </div>
 
                 {!loading && products.length === 0 && (
-                    <div className="text-center mt-5 w-100">
-                        <p className="text-muted">لا يوجد بيانات في الوقت الحالي</p>
+                     <div className="request-product-content" style={{ marginTop: '20px' }}>
+                        <div className="text-center">
+                            <BsBoxSeam size={80} className="empty-state-icon" />
+                            <h5 className="empty-state-text">{t("no_products")}</h5>
+                        </div>
+
+                        <div className="whatsapp-button-container" style={{ marginTop: '30px' }}>
+                            <button
+                                onClick={() => window.open("https://wa.me/+96567691171", "_blank")}
+                                className="btn whatsapp-button"
+                            >
+                                <FaWhatsapp size={20} />
+                                <span>{t("contact_us_whatsapp")}</span>
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>        

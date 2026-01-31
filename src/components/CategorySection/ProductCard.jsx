@@ -10,6 +10,7 @@ import "./CategorySection.css";
 
 const ProductCard = React.memo(({ p, showFastBadge = false }) => {
   const { t } = useTranslation();
+  if (!p) return null;
   const images = p.images && p.images.length ? p.images : [p.image];
   const navigate = useNavigate();
   const { cart, fetchCart } = useCart();

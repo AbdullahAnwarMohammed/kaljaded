@@ -142,6 +142,7 @@ class PaymentMyFatoorahController extends Controller
                         'slug'                       => $product->slug,
                     ]);
                     $createdOrderIds[] = $order->id;
+                    $product->delete();
                 }
                 $cart->items()->delete();
                 DB::commit();
@@ -203,7 +204,7 @@ class PaymentMyFatoorahController extends Controller
             "ErrorUrl"           => route('myfatoorah.failure'),
             "Language"           => "en",
             "CustomerEmail"      => $cacheData['customer_email'],
-            "DisplayCurrencyIso" => "KWD",
+            "DisplayCurrencyIso" => "EGP",
             "CustomerReference"  => $merchantOrderId, // Use UUID
             "UserDefinedField"   => $merchantOrderId,
         ];
@@ -355,6 +356,7 @@ class PaymentMyFatoorahController extends Controller
                 ]);
 
                 if (!$createdFirstId) $createdFirstId = $order->id;
+                $product->delete();
             }
 
             // Clear Cart
@@ -364,7 +366,6 @@ class PaymentMyFatoorahController extends Controller
 
             // Clear Cache
             \Illuminate\Support\Facades\Cache::forget('myfatoorah_order_' . $merchantOrderId);
-            $product->delete();
             return redirect()->away("$frontendUrl/payment-success?order_id=" . $createdFirstId);
 
         } catch (\Exception $e) {
@@ -441,7 +442,7 @@ class PaymentMyFatoorahController extends Controller
         // If still 0, maybe default to 10 just to get the methods (some gateways require > 0)
         if ($amount <= 0) $amount = 10; 
 
-        $currency = $request->input('currency', 'KWD');
+        $currency = $request->input('currency', 'EGP');
 
         $response = $this->myFatoorah->initiatePayment($amount, $currency);
 
@@ -464,3 +465,4 @@ class PaymentMyFatoorahController extends Controller
         ]);
     }
 }
+// 

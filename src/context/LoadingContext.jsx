@@ -11,6 +11,17 @@ export const LoadingProvider = ({ children }) => {
         setLoadingRef(setLoading);
     }, []);
 
+    // Safety timeout: Never allow loading to stay true for more than 20 seconds
+    useEffect(() => {
+        let timer;
+        if (loading) {
+            timer = setTimeout(() => {
+                setLoading(false);
+            }, 20000);
+        }
+        return () => clearTimeout(timer);
+    }, [loading]);
+
     return (
         <LoadingContext.Provider value={{ loading, setLoading }}>
             {children}

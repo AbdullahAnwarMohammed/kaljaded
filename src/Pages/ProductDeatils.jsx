@@ -43,11 +43,11 @@ const ProductDetails = () => {
       try {
         let res;
         if (id) {
-           res = await Api.get(`/products/${id}`);
+          res = await Api.get(`/products/${id}`);
         } else {
-           res = await Api.get(`/products/showBySlug/${slug}`);
+          res = await Api.get(`/products/showBySlug/${slug}`);
         }
-        
+
         if (res.data.success) setProduct(res.data.data);
       } catch (err) {
         console.error(err);
@@ -107,47 +107,47 @@ const ProductDetails = () => {
   };
 
 
-const handleInstallClick = async () => {
-  const token = localStorage.getItem("customer_token");
+  const handleInstallClick = async () => {
+    const token = localStorage.getItem("customer_token");
     let customer = {};
     try {
-        const storedCustomer = localStorage.getItem("customer");
-        if (storedCustomer && storedCustomer !== "undefined") {
-            customer = JSON.parse(storedCustomer);
-        }
+      const storedCustomer = localStorage.getItem("customer");
+      if (storedCustomer && storedCustomer !== "undefined") {
+        customer = JSON.parse(storedCustomer);
+      }
     } catch (e) {
-        console.error("Error parsing customer from localStorage", e);
+      console.error("Error parsing customer from localStorage", e);
     }
 
     const isValidToken = token && token !== "undefined" && token !== "null";
 
     if (!isValidToken) {
-        navigate("/login-customer");
-        return;
+      navigate("/login-customer");
+      return;
     }
 
-  try {
-    const res = await Api.post(
-      "/payment/deema/checkout",
-      {
-        productid: product.id,
-        customer_name: customer.name || "Customer",
-        customer_phone: customer.phone || "00000000",
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
+    try {
+      const res = await Api.post(
+        "/payment/deema/checkout",
+        {
+          productid: product.id,
+          customer_name: customer.name || "Customer",
+          customer_phone: customer.phone || "00000000",
         },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (res.data) {
+        console.log(res.data);
+        window.location.href = res.data.data.redirect_link;
       }
-    );
-    if (res.data) {
-      console.log(res.data);
-      window.location.href = res.data.data.redirect_link;
+    } catch (err) {
+      console.log(err);
+      alert(t("error_occurred")); // You might want to add this key too or leave alert
     }
-  } catch (err) {
-    console.log(err);
-    alert(t("error_occurred")); // You might want to add this key too or leave alert
-  }
   };
 
   const handleShare = async () => {
@@ -182,7 +182,7 @@ const handleInstallClick = async () => {
       <Helmet>
         <title>{product.name} | {t("like_new")}</title>
         <meta name="description" content={product.note || `${t("buy_now")} ${product.name}`} />
-        
+
         {/* Open Graph / Facebook / WhatsApp */}
         <meta property="og:type" content="product" />
         <meta property="og:title" content={product.name} />
@@ -219,8 +219,8 @@ const handleInstallClick = async () => {
               <MdOutlineIosShare />
             </div>
             <div className="whatsapp">
-              <Link 
-                className="whatsapp" 
+              <Link
+                className="whatsapp"
                 to={product ? `https://wa.me/?text=${encodeURIComponent(`${t("whatsapp_message_start")}\n*${product.name}*\n${window.location.origin}/product/${product.id}/${product.slug}`)}` : "#"}
                 target="_blank"
               >
@@ -289,7 +289,7 @@ const handleInstallClick = async () => {
             <h2 className="price">{product.price}<span className="unit">K.D</span></h2>
           </header>
 
-          {/* <div className="payment">
+          <div className="payment">
             <div onClick={handleInstallClick} >{t("install_with_deema")} <img src={deema_image} width={40} alt="" /></div>
 
             {!cartItem ? (
@@ -309,7 +309,7 @@ const handleInstallClick = async () => {
                 {t("product_added")}
               </button>
             )}
-          </div> */}
+          </div>
 
           <h3>{t("payment_secured")} <RiSecurePaymentLine /></h3>
         </div>
@@ -351,7 +351,7 @@ const handleInstallClick = async () => {
               </div>
               <div className="popup-overlay-dynamic-item">
                 <h6>{t("sensors_wifi")}</h6>
-                <h6>{product.device_wifi_blu ?  t("working") : t("not_working")}</h6>
+                <h6>{product.device_wifi_blu ? t("working") : t("not_working")}</h6>
               </div>
               <div className="popup-overlay-dynamic-item">
                 <h6>{t("sensors_functions")}</h6>

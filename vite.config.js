@@ -54,7 +54,7 @@ export default defineConfig({
       filename: 'stats.html',
     })
   ],
-  base: '/dist/', // <--- مهم جدًا لو هتحط build في public/dist
+  // base: '/dist/', // <--- مهم جدًا لو هتحط build في public/dist
   build: {
     rollupOptions: {
       output: {

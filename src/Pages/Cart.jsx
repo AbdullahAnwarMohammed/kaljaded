@@ -58,39 +58,48 @@ const Cart = () => {
         =============================== */}
         {cart && cart.items.length > 0 ? (
           <section className="cart-items" id="cartItems">
-            {cart.items.map((item) => (
-              <div className="cart-item" data-id={item.id} key={item.id}>
-                <div className="item-image">
-                  <img src={item.product.image} alt={item.product.name} />
-                </div>
-
-                <div className="item-details">
-                  <h3 className="item-title">{item.product.name}</h3>
-
-                  <div className="item-price">{item.price} K.D</div>
-
-                  <div className="attributes">
-                    {item.ramsize > 0 && (
-                      <div className="attribute">{item.ramsize} RAM</div>
-                    )}
-                    {item.color && <div className="attribute">{item.color}</div>}
-                    {item.memorysize > 0 && (
-                      <div className="attribute">{item.memorysize} GB</div>
-                    )}
-                    <div className="attribute">
-                      {item.product.device_clean == 100 ? t('box_included') : t('box_not_included')}
-                    </div>
+            {cart.items
+              .filter((item) => item.product)
+              .map((item) => (
+                <div className="cart-item" data-id={item.id} key={item.id}>
+                  <div className="item-image">
+                    <img
+                      src={item.product?.image}
+                      alt={item.product?.name}
+                    />
                   </div>
 
-                  <button
-                    className="remove-btn"
-                    onClick={() => handleRemove(item.id)}
-                  >
-                    <FaTrash />
-                  </button>
+                  <div className="item-details">
+                    <h3 className="item-title">{item.product?.name}</h3>
+
+                    <div className="item-price">{item.price} K.D</div>
+
+                    <div className="attributes">
+                      {item.ramsize > 0 && (
+                        <div className="attribute">{item.ramsize} RAM</div>
+                      )}
+                      {item.color && (
+                        <div className="attribute">{item.color}</div>
+                      )}
+                      {item.memorysize > 0 && (
+                        <div className="attribute">{item.memorysize} GB</div>
+                      )}
+                      <div className="attribute">
+                        {item.product?.device_clean == 100
+                          ? t("box_included")
+                          : t("box_not_included")}
+                      </div>
+                    </div>
+
+                    <button
+                      className="remove-btn"
+                      onClick={() => handleRemove(item.id)}
+                    >
+                      <FaTrash />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </section>
         ) : (
           /* ===============================

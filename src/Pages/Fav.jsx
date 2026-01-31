@@ -44,35 +44,37 @@ const Fav = () => {
         <main className="container">
             {favorites.length > 0 ? (
                 <section className="fav-items">
-                    {favorites.map((item) => (
-                        <div className="fav-item" key={item.id}>
-                            <div className="item-image">
-                                <img
-                                    src={item.product.image}
-                                    alt={item.product.name}
-                                />
-                            </div>
-
-                            <div className="item-details">
-                                <h3 className="item-title">
-                                    {item.product.name}
-                                </h3>
-
-                                <div className="item-price">
-                                    {item.product.price} د.ك
+                    {favorites
+                        .filter((item) => item.product)
+                        .map((item) => (
+                            <div className="fav-item" key={item.id}>
+                                <div className="item-image">
+                                    <img
+                                        src={item.product?.image}
+                                        alt={item.product?.name}
+                                    />
                                 </div>
 
-                                <div className="item-actions">
-                                    <button
-                                        className="remove-btn"
-                                        onClick={() => handleRemove(item.id)}
-                                    >
-                                        <FaTrash />
-                                    </button>
+                                <div className="item-details">
+                                    <h3 className="item-title">
+                                        {item.product?.name}
+                                    </h3>
+
+                                    <div className="item-price">
+                                        {item.product?.price} د.ك
+                                    </div>
+
+                                    <div className="item-actions">
+                                        <button
+                                            className="remove-btn"
+                                            onClick={() => handleRemove(item.id)}
+                                        >
+                                            <FaTrash />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        ))}
                 </section>
             ) : (
                 /* ===============================

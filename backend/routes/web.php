@@ -31,7 +31,7 @@ Route::get('/update-db-images-main', function () {
 });
 
 Route::get('/export-db', function () {
-    dd('w');
+
     try {
         $tables = \Illuminate\Support\Facades\DB::select('SHOW TABLES');
         $dbName = config('database.connections.mysql.database');

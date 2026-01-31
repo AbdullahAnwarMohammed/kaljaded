@@ -5,6 +5,7 @@ import i18n from "../i18n";
 
 const Api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
+  timeout: 15000, // 15 seconds timeout
 });
 
 // Request interceptor
@@ -14,18 +15,13 @@ const apiCache = new Map();
 // Request interceptor
 Api.interceptors.request.use(
   (config) => {
-    // Check if skipLoader is true in the config
-    if (!config.skipLoader) {
-      const setLoading = getLoadingSetter();
-      if (setLoading) setLoading(true);
-    }
-
-    // Cache Implementation
+    // 1. Cache Implementation Check FIRST
+    let isCached = false;
     if (config.method === 'get' && config.cache) {
         const key = config.url + JSON.stringify(config.params || {});
         const cachedResponse = apiCache.get(key);
         if (cachedResponse) {
-            // Serve from cache
+            isCached = true;
             config.adapter = () => Promise.resolve({
                 data: cachedResponse,
                 status: 200,
@@ -34,11 +30,18 @@ Api.interceptors.request.use(
                 config,
                 request: {}
             });
-            // Don't skip loader if we emulate network request, but we can speed it up. 
-            // Actually, if cached, we might want to skip loader or show it very briefly?
-            // Let's leave loader logic as is, it will just flip fast.
         }
     }
+
+    // 2. Decide whether to show loader
+    // Skip loader if skipLoader is true OR if we have the data in cache
+    if (!config.skipLoader && !isCached) {
+      const setLoading = getLoadingSetter();
+      if (setLoading) setLoading(true);
+    }
+    
+    // Always store whether it was cached/skipped for the response interceptor
+    if (isCached) config.skipLoader = true;
     
     const customerToken = localStorage.getItem("customer_token");
     const guestToken = getGuestToken();

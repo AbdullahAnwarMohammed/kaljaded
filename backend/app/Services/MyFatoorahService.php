@@ -75,6 +75,7 @@ class MyFatoorahService
     /**
      * Initiate Payment to get available methods
      */
+    // KWD
     public function initiatePayment(float $invoiceAmount, string $currencyIso = 'KWD')
     {
         try {

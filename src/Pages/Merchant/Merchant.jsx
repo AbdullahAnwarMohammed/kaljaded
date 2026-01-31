@@ -66,11 +66,11 @@ const Merchant = () => {
             if (searchQuery) params.search = searchQuery;
             if (selectedCity) params.city_id = selectedCity;
 
-            // Use skipLoader if we already have merchants or if it's not the very first page of all
+            // Use the API cache for all requests in this page
             const res = await Api.get("/merchants", { 
                 params, 
-                skipLoader: merchants.length > 0 || pageNumber > 1,
-                cache: pageNumber === 1 && !searchQuery && !selectedCity 
+                skipLoader: true, // We handle loading locally for better control
+                cache: true // Cache everything (cities, search) for smooth tab switching
             });
 
             if (res.data.success) {
@@ -178,13 +178,13 @@ const Merchant = () => {
                 <div className="items">
                     {merchants.length > 0 && merchants.map((merchant) => (
                         <div className="item" key={merchant.id}>
-                            <Link to={`/merchants/${merchant.id}`} className="image">
+                            <Link to={`/merchants/${merchant.id}`} state={{ merchant }} className="image">
                                 <img
                                     src={merchant.image_vendor || imgPlaceholder}
                                     alt={merchant.name}
                                 />
                             </Link>
-                            <Link to={`/merchants/${merchant.id}`}>
+                            <Link to={`/merchants/${merchant.id}`} state={{ merchant }}>
                                 {merchant.name_vendor || merchant.name}
                             </Link>
                         </div>

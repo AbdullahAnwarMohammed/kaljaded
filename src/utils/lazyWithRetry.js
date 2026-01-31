@@ -12,7 +12,11 @@ export const lazyWithRetry = (componentImport) =>
       if (!pageHasAlreadyBeenForceRefreshed) {
         // Caching the refresh status to avoid infinite loops
         window.sessionStorage.setItem('page-has-been-force-refreshed', 'true');
-        window.location.reload(true);
+        
+        // Use a more robust reload that bypasses cache
+        const url = new URL(window.location.href);
+        url.searchParams.set('v', Date.now()); // Force cache bypass
+        window.location.replace(url.href);
       }
       
       throw error;
