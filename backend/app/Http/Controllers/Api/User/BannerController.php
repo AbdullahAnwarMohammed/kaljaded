@@ -16,4 +16,17 @@ class BannerController extends Controller
         $categories = Banner::all();
         return $this->successResponse(BannerResource::collection($categories), "messages.successfully");
     }
+
+    public function migrateData()
+    {
+        $banners = Banner::all();
+        foreach ($banners as $banner) {
+            $banner->update([
+                'title_en' => $banner->title,
+                'descrption_en' => $banner->description,
+                'body_en' => $banner->body,
+            ]);
+        }
+        return $this->successResponse(null, "Data migrated successfully");
+    }
 }

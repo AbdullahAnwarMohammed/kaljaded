@@ -13,7 +13,9 @@ class MyFatoorahService
     public function __construct()
     {
         $this->apiKey = config('services.myfatoorah.api_key') ?? '';
+        
         $useSandbox = config('services.myfatoorah.use_sandbox');
+        
         if ($useSandbox) {
             $this->baseUrl = config('services.myfatoorah.sandbox_url') ?? 'https://apitest.myfatoorah.com';
         } else {
@@ -75,7 +77,6 @@ class MyFatoorahService
     /**
      * Initiate Payment to get available methods
      */
-    // KWD
     public function initiatePayment(float $invoiceAmount, string $currencyIso = 'KWD')
     {
         try {
@@ -85,23 +86,8 @@ class MyFatoorahService
                     'CurrencyIso'   => $currencyIso,
                 ]);
 
-
-                Log::info('MF Initiate Request', [
-    'url' => $this->baseUrl . "/v2/InitiatePayment",
-    'headers' => $this->headers(),
-    'body' => [
-        'InvoiceAmount' => $invoiceAmount,
-        'CurrencyIso' => $currencyIso,
-    ]
-]);
-
             if ($response->failed()) {
-     
-                Log::error('MyFatoorah InitiatePayment Failed', [
-                    'status' => $response->status(),
-                    'body'   => $response->body(),
-                    'json'   => $response->json(),
-                ]);
+                Log::error('MyFatoorah InitiatePayment Failed', ['body' => $response->body()]);
                 return $response->json();
             }
             return $response->json();

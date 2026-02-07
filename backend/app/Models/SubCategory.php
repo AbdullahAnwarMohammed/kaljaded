@@ -42,7 +42,7 @@ class SubCategory extends Model
      */
     public function getImageUrlAttribute()
     {
-        return $this->image ? 'https://kaljaded.com/uploads/' . $this->image : null;
+        return $this->image ? 'https://kaljaded.com/' . $this->image : null;
     }
 
     /**

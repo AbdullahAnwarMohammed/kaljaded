@@ -23,7 +23,7 @@ class AuthController extends Controller
             'name'     => $request->name,
             'email'    => $request->email,
             'phone' => $request->phone,
-            'password' => Hash::make($request->password),
+            'password' => $request->password,
             'role' => 1,
         ]);
         $token = $user->createToken('api_token')->plainTextToken;
@@ -44,7 +44,7 @@ class AuthController extends Controller
                 'name_or_phone' => [__('messages.invalid_credentials')],
             ]);
         }
-        if ($request->filled('password') && !Hash::check($request->password, $user->password)) {
+        if ($request->filled('password') && $request->password != $user->password) {
             throw ValidationException::withMessages([
                 'password' => [__('messages.invalid_credentials')],
             ]);

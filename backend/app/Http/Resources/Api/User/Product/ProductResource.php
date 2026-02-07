@@ -34,7 +34,7 @@ class ProductResource extends JsonResource
             'device_battery' => $this->device_battery,
             'device_speaker' => $this->device_speaker,
             'device_fingerprint' => $this->device_fingerprint, 
-            'color' => $lang == 'ar' ?  $this->coloar : $this->coloren ,
+            'color' => $lang == 'ar' ?  $this->colorar : $this->coloren ,
             'ramsize' => $this->ramsize,
             'category' => $this->category ? [
                 'id' => $this->category->id,
@@ -53,6 +53,8 @@ class ProductResource extends JsonResource
             ] : null,
             'fast_by' => $this->fast_by,
             'date' => $this->date,
+            'note' => $this->note,
+            'merchant_id' => $this->iduserinsert,
             'server_time' => now()->format('Y-m-d H:i:s'),
         ];
     }

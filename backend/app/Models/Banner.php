@@ -8,14 +8,15 @@ class Banner extends Model
 {
     protected $fillable = [
         'image',
-        'title_ar',
-        'description_ar',
+        'title',
         'title_en',
+        'description',
         'description_en',
+        'body',
+        'body_en',
         'color',
-        'body'
     ];
-
+    public $timestamps = false;
     public function getImageUrlAttribute()
     {
         return $this->image ? 'https://kaljaded.com/' . $this->image : null;

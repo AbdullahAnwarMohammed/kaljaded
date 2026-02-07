@@ -44,9 +44,9 @@ return [
 
     'myfatoorah' => [
     'api_key' => env('MYFATOORAH_API_KEY'),
-    'use_sandbox' => env('MYFATOORAH_USE_SANDBOX', true),
-    'sandbox_url' => 'https://apitest.myfatoorah.com',
-    'live_url' => 'https://api.myfatoorah.com',
+    'use_sandbox' => env('MYFATOORAH_USE_SANDBOX', false),
+    'sandbox_url' => env('MYFATOORAH_SANDBOX_URL'),
+    'live_url' => env('MYFATOORAH_LIVE_URL'),
 ],
 
 ];

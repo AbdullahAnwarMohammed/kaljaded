@@ -28,7 +28,7 @@ class CategoryController extends Controller
                 $q->where(function ($subQ) {
                     $subQ->where('fast_by', '!=', 1)
                          ->orWhereNull('fast_by');
-                })->orderBy('id', 'desc')->limit(5);
+                })->orderBy('id', 'desc')->limit(25);
             }
         ])
             ->has('products')
@@ -78,7 +78,7 @@ class CategoryController extends Controller
             });
         }
 
-        $products = $productsQuery->orderBy('id', 'desc')->paginate(10);
+        $products = $productsQuery->orderBy('id', 'desc')->paginate(25);
 
         return $this->successResponse([
             'category' => $category ? new CategoryResource($category) : null,
@@ -130,7 +130,7 @@ class CategoryController extends Controller
             });
         }
 
-        $products = $productsQuery->orderBy('id', 'desc')->paginate(10);
+        $products = $productsQuery->orderBy('id', 'desc')->paginate(25);
 
         return $this->successResponse([
             'category' => $category ? new CategoryResource($category) : null,
@@ -142,5 +142,42 @@ class CategoryController extends Controller
                 'total' => $products->total(),
             ],
         ]);
+    }
+    public function getSubSubCategories(Request $request, $id)
+    {
+        // Fetch top-level types (where parent_id is NULL or 0) for the brand
+        $query = \App\Models\SubSubCategory::where('sub_category_id', $id)
+            ->where(function($q) {
+                $q->whereNull('parent_id')->orWhere('parent_id', 0);
+            });
+
+        if ($request->has('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        $types = $query->get();
+        
+        return $this->successResponse(
+            \App\Http\Resources\Api\User\SubSubCategory\SubSubCategoryResource::collection($types),
+            "messages.successfully"
+        );
+    }
+
+    public function getSubSubCategoryChildren(Request $request, $id)
+    {
+        $children = \App\Models\SubSubCategory::where('parent_id', $id)->get();
+        return $this->successResponse(
+            \App\Http\Resources\Api\User\SubSubCategory\SubSubCategoryResource::collection($children),
+            "messages.successfully"
+        );
+    }
+
+    public function getSubSubSubCategories(Request $request, $id)
+    {
+        $items = \App\Models\SubSubSubCategory::where('parent_id', $id)->get();
+        return $this->successResponse(
+            \App\Http\Resources\Api\User\SubSubSubCategory\SubSubSubCategoryResource::collection($items),
+            "messages.successfully"
+        );
     }
 }

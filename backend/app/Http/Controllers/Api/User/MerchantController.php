@@ -31,7 +31,7 @@ class MerchantController extends Controller
             $query = User::whereIn('role', [4, 5])
                 ->whereHas('products')
                 ->orderBy('id', 'desc');
-            
+
             if ($city_id) {
                 $query->where('city_id', $city_id);
             }
@@ -62,7 +62,7 @@ class MerchantController extends Controller
     {
         try {
             $perPage = $request->get('per_page', 10);
-            $search = $request->get('q'); 
+            $search = $request->get('q');
 
             $merchant = User::where('id', $id)
                 ->where(function ($query) {
@@ -84,7 +84,7 @@ class MerchantController extends Controller
                     })->orWhere(function ($subQ) {
                         // Condition 2: fast_by IS 1 AND date is within last hour
                         $subQ->where('fast_by', 1)
-                             ->where('date', '>=', Carbon::now('Africa/Cairo')->subHour());
+                             ->where('date', '>=', Carbon::now('Asia/Kuwait')->subHour());
                     });
                 })
                 ->when($search, function ($query, $search) {
@@ -174,17 +174,17 @@ class MerchantController extends Controller
             // Check time constraint
             $orderDate = Carbon::parse($latestOrder->date_receipt);
             $now = Carbon::now('Africa/Cairo');
-            
+
             // If order is less than 1 hour old
             if ($orderDate->diffInMinutes($now) < 60) {
                  $secondsPassed = $orderDate->diffInSeconds($now);
                  $remainingSeconds = 3600 - $secondsPassed;
-                 
+
                  // Ensure we don't return negative just in case
                  if ($remainingSeconds > 0) {
                      return $this->successResponse([
-                         'allowed' => false, 
-                         'message' => 'wait_for_cooldown', 
+                         'allowed' => false,
+                         'message' => 'wait_for_cooldown',
                          'remaining_seconds' => $remainingSeconds
                      ], 'eligibility_checked');
                  }

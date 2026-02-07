@@ -16,6 +16,7 @@ class SubSubCategoryResource extends JsonResource
             'name' => $lang === 'en' ? $this->nameen : $this->name,
             'slug' => $this->slug,
             'price' => $this->price,
+            'image' => $this->image_url,
 
             'category_id' => $this->category_id,
             'sub_category_id' => $this->sub_category_id,

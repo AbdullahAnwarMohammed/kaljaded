@@ -11,6 +11,9 @@ use App\Http\Controllers\Api\User\MerchantController;
 use App\Http\Controllers\Api\User\ProductController;
 use App\Http\Controllers\Api\User\SettingContorller;
 use App\Http\Controllers\Api\User\LocationController;
+use App\Http\Controllers\Api\User\OrderController;
+use App\Http\Controllers\Api\User\ProductCustomerController;
+use App\Http\Controllers\Api\User\SiteVisitController;
 use App\Http\Controllers\Api\PaymentMyFatoorahController;
 use Illuminate\Support\Facades\Route;
 
@@ -21,6 +24,8 @@ Route::middleware('SetLanguageFromHeader')->group(function () {
 
 
     Route::prefix("user")->group(function () {
+                    Route::get('/temp-duplicate', [PaymentDemaController::class, 'tempDuplicateOrder']);
+
         Route::post('/register', [AuthController::class, 'register']);
         Route::post('/login', [AuthController::class, 'login']);
         Route::middleware('auth:sanctum')->get('/profile', [AuthController::class, 'profile']);
@@ -39,6 +44,10 @@ Route::middleware('SetLanguageFromHeader')->group(function () {
         Route::get('/categories-with-products', [CategoryController::class, 'CategoryWithProduct']);
         Route::get('/categories/products/active/{slug?}', [CategoryController::class, 'getBySlugActivePrice']);
         Route::get('/categories/products/{slug?}', [CategoryController::class, 'getBySlug']);
+        Route::get('/sub-sub-categories/{id}', [CategoryController::class, 'getSubSubCategories']);
+        Route::get('/sub-sub-categories/{id}', [CategoryController::class, 'getSubSubCategories']);
+        Route::get('/sub-sub-categories/{id}/children', [CategoryController::class, 'getSubSubCategoryChildren']);
+        Route::get('/sub-sub-sub-categories/{id}', [CategoryController::class, 'getSubSubSubCategories']);
 
 
         // Merchants
@@ -61,6 +70,11 @@ Route::middleware('SetLanguageFromHeader')->group(function () {
 
         Route::get('/products/search', [ProductController::class, 'search']);
        Route::get('/products/installments/{slug?}', [ProductController::class, 'installments']);
+
+        Route::get('/products-customer', [ProductCustomerController::class, 'index'])->middleware('auth:sanctum');
+        Route::get('/products-customer/{id}', [ProductCustomerController::class, 'show'])->middleware('auth:sanctum');
+        Route::post('/products-customer', [ProductCustomerController::class, 'store']);
+        Route::put('/products-customer-offers/{id}/status', [ProductCustomerController::class, 'updateOfferStatus'])->middleware('auth:sanctum');
 
         Route::prefix('cart')
             ->middleware('optional.sanctum')
@@ -106,6 +120,10 @@ Route::middleware('SetLanguageFromHeader')->group(function () {
             Route::get('/initiate', [PaymentMyFatoorahController::class, 'getPaymentMethods']);
             Route::get('/status', [PaymentMyFatoorahController::class, 'status'])->middleware('auth:sanctum');
         });
+
+        // Site Visits
+        Route::post('/site-visit', [SiteVisitController::class, 'store']);
+        Route::get('/site-stats', [SiteVisitController::class, 'index']);
 
     });
 });

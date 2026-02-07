@@ -19,7 +19,7 @@ class ProductController extends Controller
     use ApiResponseTrait;
     public function index(Request $request)
     {
-        $perPage = $request->query('per_page', 10);
+        $perPage = $request->query('per_page', 25);
         $search = $request->query('search');
 
         $query = Product::with(['category', 'subcategory', 'subsubcategory'])
@@ -57,12 +57,13 @@ class ProductController extends Controller
             return $this->errorResponse('messages.product_not_found', 404);
         }
 
+        $this->recordView($product);
+
         return $this->successResponse(
             new ProductResource($product),
             'messages.product_details'
         );
     }
-
     public function show($id)
     {
         $product = Product::with(['category', 'subcategory', 'subsubcategory'])->find($id);
@@ -71,12 +72,41 @@ class ProductController extends Controller
             return $this->errorResponse('messages.product_not_found', 404);
         }
 
+        $this->recordView($product);
+
         return $this->successResponse(
             new ProductResource($product),
             'messages.product_details'
         );
     }
 
+    private function recordView($product)
+    {
+        $userId = auth()->guard('sanctum')->id();
+        $ip = request()->ip();
+
+        // Check if this IP has already viewed this product
+        $existingView = $product->views()
+            ->where('ip_address', $ip)
+            ->first();
+
+        if ($existingView) {
+            // If we now have a user_id but the existing record didn't, update it
+            if ($userId && !$existingView->user_id) {
+                $existingView->update(['user_id' => $userId]);
+            }
+        } else {
+            // New view from this IP
+            // Increment public view counter
+            $product->increment('view');
+
+            // Log the view
+            $product->views()->create([
+                'ip_address' => $ip,
+                'user_id' => $userId,
+            ]);
+        }
+    }
 
     public function search(Request $request)
     {
@@ -132,7 +162,7 @@ class ProductController extends Controller
                     ->orWhere('nameen', 'LIKE', "%{$search}%");
             });
         }
-        $products = $productsQuery->paginate(10);
+        $products = $productsQuery->paginate(25);
         return $this->successResponse([
             'category' => $category ? new CategoryResource($category) : null,
             'subcategory' => $subcategory ? new SubCategoryResource($subcategory) : null,

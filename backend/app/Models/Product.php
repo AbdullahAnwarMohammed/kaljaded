@@ -60,6 +60,9 @@ class Product extends Model
         'price_sale' => 'decimal:2',
     ];
 
+    public $timestamps = false;
+
+
 
     protected $imagePrefix = 'https://kaljaded.com/';
 
@@ -105,5 +108,9 @@ class Product extends Model
     public function subsubcategory()
     {
         return $this->belongsTo(SubSubCategory::class, 'sub_sub_category_id');
+    }
+    public function views()
+    {
+        return $this->morphMany(ProductView::class, 'visitable');
     }
 }

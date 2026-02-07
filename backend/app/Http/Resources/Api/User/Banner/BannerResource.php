@@ -16,10 +16,10 @@ class BannerResource extends JsonResource
         return [
             'id' => $this->id,
             'image' => $this->image_url,
-            'title' => $lang == 'ar' ? $this->title_ar : $this->title_en,
-            'description' => $lang == 'ar' ? $this->description_ar : $this->description_en,
+            'title' => $lang == 'ar' ? $this->title : $this->title_en,
+            'description' => $lang == 'ar' ? $this->description : $this->description_en,
             'color' => $this->color,
-            'body' => $lang == 'ar' ?  $this->body_ar : $this->body_en,
+            'body' => $lang == 'ar' ?  $this->body : $this->body_en,
         ];
     }
 }
