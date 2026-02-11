@@ -85,7 +85,7 @@ const Footer = () => {
                 </div>
 
 
-                <div className="item added">
+                {/* <div className="item added">
                     <NavLink
                         to="/request-product"
                         className={({ isActive }) =>
@@ -99,7 +99,7 @@ const Footer = () => {
                             </>
                         )}
                     </NavLink>
-                </div>
+                </div> */}
                 <div className="item">
                     <NavLink
                         to="/category/installments"

@@ -138,14 +138,36 @@
     gap: 10px;
     flex-wrap: wrap;
     margin-bottom: 25px;
+        justify-content: space-between;
+}
+
+.product-details-page .attributes .link-merchament {
+     color: #ffffff;
+    background: #283158;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.product-details-page .attributes .link-merchament:hover {
+    background: #e4e6eb;
+    color: #000;
+
+}
+.product-details-page .attributes .attr{
+    display: flex;
 }
 
 .product-details-page .attribute {
     background: #fff;
     border: 1px solid #e1e4e8;
-    padding: 8px 16px;
+    padding: 4px 10px;
     border-radius: 12px;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     font-weight: 600;
     color: #555;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
@@ -154,8 +176,7 @@
 /* Comment Box */
 .product-details-page .comment-vendor {
     background: #fff;
-    border-left: 5px solid #ffc107;
-    padding: 15px;
+    padding: 10px;
     border-radius: 10px;
     margin-bottom: 25px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
@@ -168,13 +189,15 @@
     font-weight: 700;
     color: #333;
     margin-bottom: 8px;
+    font-size: 12px;
 }
 
 .product-details-page .comment-vendor p {
-    font-size: 0.95rem;
-    color: #666;
+    font-size: 0.75rem;
+    color: #000;
     margin: 0;
     line-height: 1.6;
+    font-weight: bold;
 }
 
 /* Device Info List */
@@ -302,8 +325,8 @@
 }
 
 .product-details-page .remove-product-cart {
-    background: #28a745;
-    box-shadow: 0 10px 25px rgba(40, 167, 69, 0.3);
+    background: #283158;
+    box-shadow:0 10px 25px rgb(220 224 238);
 }
 
 .product-details-page .buy-now:hover,

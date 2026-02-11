@@ -1,0 +1,938 @@
+.add-device-wrapper {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.add-device-header {
+  background-color: #435292;
+  color: white;
+  padding: 15px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.add-device-header h3 {
+  font-size: 1.2rem;
+  margin: 0;
+  font-weight: bold;
+}
+
+.header-back-btn {
+  background: none;
+  border: none;
+  color: white;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+/* Condition Toggle */
+.condition-toggle-container {
+  display: flex;
+  gap: 15px;
+  padding: 20px;
+  justify-content: center;
+}
+
+.condition-option {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  flex: 1;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  font-weight: bold;
+  color: #333;
+  transition: all 0.2s;
+}
+
+.condition-option.active {
+  border-color: #435292; /* Or just keep it clean as screenshot looks uniform */
+}
+
+/* Custom Radio Circle */
+.radio-circle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #7b839c; /* Grayish blue from screenshot */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.condition-option.active .radio-circle {
+  background-color: #5c6bc0; /* Active color */
+}
+
+/* Menu List */
+.device-menu-list {
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.device-menu-item {
+  background: white;
+  border-radius: 12px;
+  padding: 20px; /* Large padding as per screenshot */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); /* Subtle shadow */
+}
+
+.item-label {
+  flex-grow: 1;
+  text-align: right; /* Arabic Layout */
+  font-weight: bold;
+  color: #555;
+  margin-right: 15px;
+}
+
+.item-arrow {
+  color: #ccc;
+}
+
+.item-status-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Warning Modal */
+.warning-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end; /* Sheet style or center? Screenshot shows bottom sheet style maybe or center. Let's do center with rounded corners but big */
+  align-items: center;
+}
+
+.warning-modal-content {
+  background: white;
+  width: 100%;
+  max-width: 400px;
+  padding: 63px 25px;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.warning-icon-container {
+  margin-bottom: 15px;
+}
+
+.warning-triangle {
+  font-size: 50px;
+}
+
+.warning-title {
+  color: #2196f3; /* Light Blue title per screenshot */
+  font-weight: bold;
+  font-size: 1.2rem;
+  margin-bottom: 15px;
+}
+
+.warning-box {
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.warning-text {
+  font-size: 0.9rem;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.warning-text-highlight {
+  font-size: 0.95rem;
+  color: #d32f2f; /* Red */
+  font-weight: bold;
+  margin: 0;
+}
+
+.warning-checkbox-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.custom-checkbox {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #333;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.custom-checkbox.checked {
+  border-color: #435292;
+  /* content handled by icon */
+}
+
+.checkbox-label {
+  font-size: 0.9rem;
+  font-weight: bold;
+  text-align: right; /* RTL */
+  flex-grow: 1;
+}
+
+.warning-note {
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.btn-next {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  font-weight: bold;
+  font-size: 1rem;
+  margin-bottom: 15px;
+  cursor: pointer;
+}
+
+.btn-next.active {
+  background-color: #eee; /* Light gray button in screenshot when active? Or blue? Screenshot shows very light gray button with text "التالي". Wait, screenshot shows "التالي" inside a button which looks disabled or just light. */
+  background-color: #f0f0f0;
+  color: #bbb; /* Looks disabled in screenshot actually. But let's assume active state becomes Blue. */
+}
+/* Wait, screenshot shows checkbox UNCHECKED. So button is likely disabled style. */
+.btn-next.active {
+  background-color: #435292;
+  color: white;
+}
+.btn-next.disabled {
+  background-color: #f2f2f2;
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.btn-retreat {
+  background: none;
+  border: none;
+  color: #d32f2f;
+  font-weight: bold;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+/* Category Selection View */
+.category-selection-view {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.category-card {
+  background: white;
+  border-radius: 12px;
+  padding: 10px 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08); /* Soft shadow */
+  cursor: pointer;
+  transition: transform 0.2s;
+  height: 80px; /* Fixed height for consistency */
+  flex-direction: row-reverse;
+}
+
+.category-card:hover {
+  transform: translateY(-2px);
+}
+
+.category-name {
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: #333;
+  flex-grow: 1;
+  text-align: center; /* Center text as per screenshot (mostly centered) */
+}
+
+.category-image-wrapper {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.category-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* Specific style for text-only cards (Types) */
+.category-card.text-only {
+    height: auto;
+    min-height: 60px;
+    flex-direction: row;
+    padding: 15px 20px;
+}
+
+.category-card.text-only .category-name {
+    text-align: right;
+    font-size: 1rem;
+    font-weight: normal;
+}
+
+/* Loader */
+.loading-spinner-container {
+  display: flex;
+  justify-content: center;
+  padding: 50px;
+}
+
+/* Disabled State for Menu Items */
+.device-menu-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #f0f0f0;
+  pointer-events: none; /* Prevent clicks */
+}
+
+/* Completed Status Icon */
+/* Duplicate definition removed */
+
+.item-status-icon.active {
+  background: none; /* Remove gray background when checked icon is shown */
+}
+
+/* Color Selection View */
+.color-selection-view {
+    padding: 50px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+}
+
+.color-input-container {
+    width: 100%;
+    max-width: 400px;
+}
+
+.color-text-input {
+    width: 100%;
+    padding: 15px;
+    border: 1.5px solid #2196F3;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    text-align: right; 
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.color-text-input:focus {
+    border-width: 2px;
+}
+
+.btn-confirm-color {
+    width: 100%;
+    max-width: 350px;
+    padding: 15px;
+    border-radius: 12px;
+    border: none;
+    font-weight: bold;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 50px;
+}
+
+.btn-confirm-color.active {
+    background-color: #435292;
+    color: white;
+    box-shadow: 0 4px 15px rgba(67, 82, 146, 0.3);
+}
+
+.btn-confirm-color.disabled {
+    background-color: #f2f2f2;
+    color: #ccc;
+    cursor: not-allowed;
+}
+
+/* Images Selection View */
+.images-selection-view {
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: calc(100vh - 80px);
+}
+
+.upload-main-container {
+    margin-bottom: 30px;
+}
+
+.upload-card {
+    background: white;
+    width: 140px;
+    height: 140px;
+    border-radius: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+
+.upload-card:active {
+    transform: scale(0.95);
+}
+
+.upload-icon-container {
+    position: relative;
+    width: 80px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 5px;
+}
+
+.icon-plus-box {
+    width: 48px;
+    height: 48px;
+    border: 3px solid #717fe0;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    z-index: 2;
+    position: relative;
+}
+
+.plus-sign {
+    color: #717fe0;
+    font-size: 32px;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.icon-camera-mini {
+    position: absolute;
+    right: 5px;
+    bottom: 5px;
+    z-index: 3;
+}
+
+.camera-body {
+    width: 30px;
+    height: 22px;
+    border: 2px solid #2196f3;
+    border-radius: 6px;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.camera-lens {
+    width: 10px;
+    height: 10px;
+    border: 2px solid #2196f3;
+    border-radius: 50%;
+}
+
+.camera-top {
+    position: absolute;
+    top: -4px;
+    left: 8px;
+    width: 10px;
+    height: 4px;
+    border: 2px solid #2196f3;
+    border-bottom: none;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    background: white;
+}
+
+.upload-label {
+    font-weight: bold;
+    color: #333;
+    font-size: 1.1rem;
+}
+
+.images-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    width: 100%;
+    max-width: 400px;
+    margin-bottom: 50px;
+    padding: 10px;
+}
+
+.preview-item {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 12px;
+    overflow: visible;
+    background: #f0f0f0;
+}
+
+.preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 12px;
+}
+
+.btn-remove-img {
+    position: absolute;
+    top: -8px;
+    left: -8px;
+    background: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 10;
+}
+
+.remove-icon-box {
+    background-color: #ff5252;
+    color: white;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.btn-confirm-images {
+    width: 100%;
+    max-width: 350px;
+    padding: 15px;
+    border-radius: 12px;
+    border: none;
+    font-weight: bold;
+    font-size: 1.1rem;
+    cursor: pointer;
+    margin-top: auto;
+    margin-bottom: 20px;
+}
+
+.btn-confirm-images.active {
+    background-color: #435292;
+    color: white;
+}
+
+.btn-confirm-images.disabled {
+    background-color: #f2f2f2;
+    color: #ccc;
+    cursor: not-allowed;
+}
+
+/* Device Data View */
+.device-data-view {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.readonly-device-type {
+    background: #fdfdfd;
+    border: 1.5px solid #333;
+    border-radius: 12px;
+    padding: 15px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.input-label-header {
+    font-weight: bold;
+    color: #333;
+    font-size: 0.95rem;
+    text-align: right;
+}
+
+.input-hint {
+    color: #888;
+    font-size: 0.85rem;
+    text-align: right;
+    margin-bottom: 2px;
+}
+
+.device-textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 15px;
+    border: 1.5px solid #333;
+    border-radius: 15px;
+    text-align: right;
+    font-size: 1rem;
+    outline: none;
+    resize: none;
+}
+
+.device-price-input {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-bottom: 1px solid #eee;
+    text-align: center;
+    font-size: 1.2rem;
+    outline: none;
+}
+
+.serial-input-container {
+    display: flex;
+    align-items: center;
+    border: 1.5px solid #2196F3;
+    border-radius: 12px;
+    padding: 5px 15px;
+    gap: 10px;
+}
+
+.barcode-icon {
+    color: #333;
+}
+
+.serial-input {
+    flex-grow: 1;
+    border: none;
+    padding: 10px;
+    text-align: right;
+    font-size: 1.1rem;
+    outline: none;
+}
+
+.btn-confirm-data {
+    width: 100%;
+    padding: 15px;
+    border-radius: 15px;
+    border: none;
+    font-weight: bold;
+    font-size: 1.1rem;
+    cursor: pointer;
+    margin-top: 20px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.btn-confirm-data.active {
+    background-color: #435292;
+    color: white;
+}
+
+.btn-confirm-data.disabled {
+    background-color: #f2f2f2;
+    color: #ccc;
+    cursor: not-allowed;
+}
+
+/* Device Test View */
+.device-test-view {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 100px);
+}
+
+.test-item {
+    margin-bottom: 12px;
+}
+
+.test-status-circle {
+    width: 24px;
+    height: 24px;
+    border: 2px solid #ccc;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.test-status-circle.active {
+    border-color: #435292;
+    background-color: #435292;
+}
+
+.test-status-circle .inner-dot {
+    width: 10px;
+    height: 10px;
+    background-color: white;
+    border-radius: 50%;
+}
+
+.btn-confirm-test {
+    width: 100%;
+    padding: 15px;
+    border-radius: 12px;
+    border: none;
+    font-weight: bold;
+    font-size: 1.1rem;
+    cursor: pointer;
+    margin-top: auto;
+    margin-bottom: 20px;
+    transition: all 0.2s;
+}
+
+.btn-confirm-test.active {
+    background-color: #435292;
+    color: white;
+}
+
+.btn-confirm-test.disabled {
+    background-color: #888;
+    color: #ccc;
+    cursor: not-allowed;
+}
+
+/* Test Detail View */
+.test-detail-view {
+    padding: 20px;
+}
+
+.detail-title {
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 30px;
+    color: #333;
+}
+
+.options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.option-card {
+    background: white;
+    padding: 18px 20px;
+    border-radius: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+}
+
+.option-card.selected {
+    border-color: #435292;
+    background-color: #f9faff;
+}
+
+.radio-dot {
+    width: 22px;
+    height: 22px;
+    border: 2px solid #ccc;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.radio-dot.active {
+    border-color: #435292;
+}
+
+.radio-dot.active .inner-dot {
+    width: 12px;
+    height: 12px;
+    background-color: #435292;
+    border-radius: 50%;
+}
+
+.option-label {
+    font-weight: 500;
+    color: #333;
+    font-size: 1.05rem;
+}
+
+
+/* Unique Numbered Design for Test Details */
+.option-card.numbered {
+    padding: 10px 10px 10px 20px;
+    border-radius: 18px;
+    background: white;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    border: none;
+    display: flex;
+    flex-direction: row-reverse;
+}
+
+.option-card.numbered.selected {
+    background-color: #f0f7ff;
+    box-shadow: 0 4px 15px rgba(67, 82, 146, 0.1);
+}
+
+.option-index-circle {
+    width: 36px;
+    height: 36px;
+    background-color: #8db5ff; /* Soft blue from screenshot */
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.option-card.numbered.selected .option-index-circle {
+    background-color: #435292; /* Highlight selected index */
+}
+
+/* Ensure padding and layout match screenshot */
+.option-card.numbered .option-label {
+    flex-grow: 1;
+    text-align: center;
+    font-weight: bold;
+    color: #333;
+}
+
+
+/* Enhanced Shadow and Typography for Test Details */
+.test-detail-view .detail-title {
+    font-size: 1.8rem;
+    font-weight: 900;
+    margin-bottom: 40px;
+    color: #000;
+}
+
+.option-card.numbered {
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    margin-bottom: 20px;
+    height: 70px;
+}
+
+.option-card.numbered .option-label {
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+.option-index-circle {
+    width: 40px;
+    height: 40px;
+    background-color: #8db5ff;
+}
+
+
+/* Cleanliness Design Fixes */
+.cleanliness-grid .detail-title {
+    font-size: 1.6rem;
+    margin-bottom: 25px;
+}
+
+.option-card.numbered.selected {
+    border: 3px solid #435292;
+}
+
+.cleanliness-grid .btn-confirm-test {
+    margin-top: 40px !important;
+}
+
+
+/* Battery Input View Styles */
+.battery-input-view {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: calc(100vh - 100px);
+}
+
+.battery-input-container {
+    width: 100%;
+    max-width: 350px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 40px;
+}
+
+.battery-input-subtitle {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #000;
+    margin-bottom: 20px;
+}
+
+.battery-percentage-input {
+    width: 100%;
+    height: 65px;
+    background-color: #f0f3ff;
+    border: 1.5px solid #2196F3;
+    border-radius: 12px;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+    outline: none;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.battery-percentage-input::placeholder {
+    color: #ccc;
+}
+

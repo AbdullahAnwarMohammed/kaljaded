@@ -26,7 +26,7 @@ const ProductByCategory = lazyWithRetry(() => import("./Pages/ProductByCategory"
 const Cart = lazyWithRetry(() => import("./Pages/Cart"));
 const Fav = lazyWithRetry(() => import("./Pages/Fav"));
 const LoginCustomer = lazyWithRetry(() => import("./Pages/LoginCustomer"));
-const RegisterCustomer = lazyWithRetry(() => import("./Pages/RegisterCustomer"));
+// const RegisterCustomer = lazyWithRetry(() => import("./Pages/RegisterCustomer"));
 const RegisterVendor = lazyWithRetry(() => import("./Pages/RegisterVendor"));
 const ContactUs = lazyWithRetry(() => import("./Pages/ContactUs"));
 const ProductDeatils = lazyWithRetry(() => import("./Pages/ProductDeatils"));
@@ -38,6 +38,9 @@ const CheckoutTabs = lazyWithRetry(() => import("./Pages/Checkout/CheckoutTabs")
 const AboutUs = lazyWithRetry(() => import("./Pages/AboutUs"));
 const PrivacyPolicy = lazyWithRetry(() => import("./Pages/PrivacyPolicy"));
 const RequestProduct = lazyWithRetry(() => import("./Pages/RequestProduct"));
+const AddDevice = lazy(() => import("./Pages/AddDevice"));
+const ProductCustomerDetails = lazy(() => import("./Pages/ProductCustomerDetails"));
+const SiteStats = lazy(() => import("./components/SiteStats/SiteStats"));
 
 function App() {
   return (
@@ -135,6 +138,16 @@ function App() {
                   </MainLayout>
                 }
               />
+              
+              {/* Short Link Route */}
+              <Route
+                path="/p/:id"
+                element={
+                  <MainLayout>
+                    <ProductDeatils />
+                  </MainLayout>
+                }
+              />
 
               {/* الصفحات بدون Header/Footer */}
               <Route
@@ -148,16 +161,7 @@ function App() {
                 }
               />
 
-              <Route
-                path="/register-customer"
-                element={
-                  <GuestRoute>
-                    <EmptyLayout>
-                      <RegisterCustomer />
-                    </EmptyLayout>
-                  </GuestRoute>
-                }
-              />
+
 
               <Route
                 path="/register-vendor"
@@ -203,6 +207,26 @@ function App() {
                   <MainLayout>
                     <RequestProduct />
                   </MainLayout>
+                }
+              />
+              
+              <Route
+                path="/add-device"
+                element={
+                  <EmptyLayout>
+                     <Suspense fallback={<Spinner />}>
+                        <AddDevice />
+                     </Suspense>
+                  </EmptyLayout>
+                }
+              />
+
+              <Route
+                path="/product-customer/:id"
+                element={
+                  <EmptyLayout>
+                     <ProductCustomerDetails />
+                  </EmptyLayout>
                 }
               />
 

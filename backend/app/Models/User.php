@@ -33,7 +33,14 @@ class User extends Authenticatable
         'floor',
         'apartment',
         'latitude',
-        'longitude'
+        'latitude',
+        'longitude',
+        'otp_code',
+        'otp_expires_at'
+    ];
+
+    protected $casts = [
+        'otp_expires_at' => 'datetime',
     ];
 
     /**

@@ -17,15 +17,48 @@ const Home = () => {
 
     const [sections, setSections] = useState(() => {
         const saved = localStorage.getItem("home_sections");
-        return saved ? JSON.parse(saved) : [];
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                // Strip views from cached data to ensure we don't show stale numbers
+                parsed.forEach(section => {
+                    if (section.products) {
+                        section.products.forEach(p => p.views = null); // or undefined
+                    }
+                });
+                return parsed;
+            } catch (e) {
+                console.error("Cache parse error", e);
+                return [];
+            }
+        }
+        return [];
     });
     const [loading, setLoading] = useState(sections.length === 0);
 
+    // useEffect(() => {
+    //     const hasSeenPopup = sessionStorage.getItem("popupSeen");
+    //     if (!hasSeenPopup) {
+    //         setShowPopup(true);
+    //         sessionStorage.setItem("popupSeen", "true");
+    //     }
+    // }, []);
+
     useEffect(() => {
+        // Record site visit
+        const recordVisit = async () => {
+            try {
+                await Api.post("/site-visit", {}, { skipLoader: true });
+            } catch (error) {
+                console.error("Failed to record visit:", error);
+            }
+        };
+        recordVisit();
         
         const fetchHomeData = async () => {
             try {
-                const res = await Api.get("/categories-with-products", { cache: true, skipLoader: true });
+                // Removed cache: true to ensure fresh data
+                const res = await Api.get("/categories-with-products", { skipLoader: true });
                 if (res.data.success) {
                     setSections(res.data.data);
                     localStorage.setItem("home_sections", JSON.stringify(res.data.data));

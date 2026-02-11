@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Helmet } from "react-helmet";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { RiArrowRightLine, RiSecurePaymentLine } from "react-icons/ri";
+import { RiArrowRightLine, RiSecurePaymentLine, RiShoppingCartLine, RiStore2Line } from "react-icons/ri";
 import { FaRegEye, FaCommentAlt, FaArrowLeft, FaWindowClose, FaCalendarAlt, FaStar, FaCog, FaArrowCircleLeft } from "react-icons/fa";
 import { IoCheckmarkDoneCircle } from "react-icons/io5";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -78,7 +78,7 @@ const ProductDetails = () => {
       await fetchCart();
 
       // التحويل إلى صفحة السلة بعد الإضافة
-      navigate("/carts");
+      navigate("/");
 
     } catch (err) {
       console.error(err);
@@ -152,7 +152,8 @@ const ProductDetails = () => {
 
   const handleShare = async () => {
     if (!product) return;
-    const shareUrl = `${window.location.origin}/product/${product.id}/${product.slug}`;
+    // Use short link for sharing
+    const shareUrl = `${window.location.origin}/p/${product.id}`;
     const shareData = {
       title: product.name,
       text: `${t("share_message_start")} ${product.name}\n${t("share_message_price")} ${product.price} K.D\n`,
@@ -188,7 +189,7 @@ const ProductDetails = () => {
         <meta property="og:title" content={product.name} />
         <meta property="og:description" content={product.note || t("share_message_start")} />
         {product.images?.[0] && <meta property="og:image" content={product.images[0]} />}
-        <meta property="og:url" content={`${window.location.origin}/product/${product.id}/${product.slug}`} />
+        <meta property="og:url" content={`${window.location.origin}/p/${product.id}`} />
         <meta property="og:site_name" content={t("like_new")} />
       </Helmet>
 
@@ -221,7 +222,7 @@ const ProductDetails = () => {
             <div className="whatsapp">
               <Link
                 className="whatsapp"
-                to={product ? `https://wa.me/?text=${encodeURIComponent(`${t("whatsapp_message_start")}\n*${product.name}*\n${window.location.origin}/product/${product.id}/${product.slug}`)}` : "#"}
+                to={product ? `https://wa.me/?text=${encodeURIComponent(`${t("whatsapp_message_start")}\n*${product.name}*\n${window.location.origin}/p/${product.id}`)}` : "#"}
                 target="_blank"
               >
                 <FaWhatsapp />
@@ -254,16 +255,21 @@ const ProductDetails = () => {
 
         {/* Attributes */}
         <div className="attributes">
-          {product.ramsize > 0 && <div className="attribute">{product.ramsize} {t("ram")}</div>}
+          <div className="attr">
+              {product.ramsize > 0 && <div className="attribute">{product.ramsize} {t("ram")}</div>}
           {product.color && <div className="attribute">{product.color}</div>}
           {product.memorysize > 0 && <div className="attribute">{product.memorysize} {t("gb")}</div>}
           <div className="attribute">{product.device_clean == 100 ? t("with_box") : t("without_box")}</div>
+          </div>
+          <Link to={`/merchants/${product.merchant_id}`} className="link-merchament">
+            <RiStore2Line size={20} />
+          </Link>
         </div>
 
         {/* Comment */}
         {product.note && (
           <div className="comment-vendor">
-            <span><FaCommentAlt /> {t("inspector_comment")}</span>
+            <span>{t("inspector_comment")}</span>
             <p>{product.note}</p>
           </div>
         )}
@@ -298,7 +304,7 @@ const ProductDetails = () => {
                 onClick={handleAddToCart}
                 disabled={loading || !cart}
               >
-                {t("buy_now")}
+                {t("add_to_cart_and_continue_shopping")}
               </button>
             ) : (
               <button
@@ -306,7 +312,7 @@ const ProductDetails = () => {
                 onClick={handleGoToCart} // بدل handleRemove
                 disabled={loading}
               >
-                {t("product_added")}
+                {t("cart")} <RiShoppingCartLine />
               </button>
             )}
           </div>

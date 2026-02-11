@@ -1,0 +1,22 @@
+
+/* Sidebar Header Styling */
+.side-menu-header {
+  background-color: #283158; /* Light gray/blue to distinguish */
+  margin: -20px -20px 0 -20px; /* Negative margin to span full width */
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center content */
+  border-bottom: 3px solid #283158; /* Bottom border for style */
+}
+
+.side-menu-header .close-btn {
+  align-self: flex-start; /* Keep close button at the start */
+  color: #fff;
+  margin-bottom: 10px;
+}
+
+.side-menu-header .logo-menu {
+  width: 120px;
+  margin-bottom: 10px;
+}

@@ -57,16 +57,77 @@
 }
 
 .login-customer-page .app-login input {
-  padding: 20px 40px;
-  margin: 7px 0;
-  border-radius: 10px;
-  border: none;
-  background-color: #e9eaec;
-  font-size: 11px;
+    padding: 17px 40px;
+    margin: 7px 0;
+    border-radius: 10px;
+    border: none;
+    background-color: #fff;
+    font-size: 14px;
+    font-weight: bold;
 }
 .login-customer-page .app-login h3:first-child {
   font-size: 17px;
+  font-weight: bold;
 }
+
+.otp-subtitle {
+  text-align: center;
+  color: #4caf50;
+  font-size: 14px;
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+.otp-container {
+  display: flex;
+  justify-content: center;
+  gap: 15px; /* Increased gap */
+  direction: ltr; 
+  margin-bottom: 20px;
+}
+
+.otp-input {
+  width: 50px !important; /* Override global styles */
+  height: 50px !important; /* Override global styles */
+  padding: 0 !important; /* Remove the huge padding from global input */
+  margin: 0 !important;
+  font-size: 24px !important;
+  font-weight: bold;
+  text-align: center;
+  border: 2px solid #ddd; /* Thicker border */
+  border-radius: 50% !important;
+  background-color: #fff;
+  color: #333; /* Ensure text is visible */
+  transition: all 0.3s ease;
+}
+
+.otp-input:focus {
+  border-color: var(--main-color);
+  box-shadow: 0 0 0 4px rgba(var(--main-color-rgb), 0.15); /* Nicer focus ring */
+  outline: none;
+  transform: translateY(-2px); /* Subtle lift effect */
+}
+
+.otp-timer {
+  text-align: center;
+  margin-top: 15px;
+  font-size: 14px;
+  color: #fff;
+  font-weight: bold;
+      margin-bottom: 13px;
+}
+
+.resend-btn {
+  background: none;
+  border: none;
+  color: var(--main-color);
+  font-weight: bold;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  font-size: 14px;
+}
+
 .login-customer-page .app-login h3:nth-of-type(2) {
   font-size: 22px;
 }
@@ -80,6 +141,7 @@
   color: #fff;
   padding: 10px;
   border-radius: 10px;
+  text-decoration: none;
 }
 .login-customer-page .register-customer-btn {
   background-color: #2b345e;

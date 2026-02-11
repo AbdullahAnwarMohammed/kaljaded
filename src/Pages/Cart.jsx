@@ -144,7 +144,7 @@ const Cart = () => {
               className="checkout-btn mt-4 text-center text-decoration-none"
               style={{ display: "block" }}
             >
-              {t('next')}
+              {t('buy_now')}
             </button>
           </section>
         )}

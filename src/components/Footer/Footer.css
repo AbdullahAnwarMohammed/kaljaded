@@ -63,14 +63,14 @@
 
 .cart-notification-banner {
     position: fixed;
-    bottom: 74px;
+    bottom: 80px;
     left: 50%;
     transform: translateX(-50%);
     width: 90%;
     max-width: 400px;
     background-color: #3b4d75;
     color: white;
-    padding: 4px 15px;
+    padding: 9px 15px;
     border-radius: 10px;
     display: flex;
     justify-content: space-between;

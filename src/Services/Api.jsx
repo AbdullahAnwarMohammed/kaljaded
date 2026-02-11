@@ -5,7 +5,7 @@ import i18n from "../i18n";
 
 const Api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
-  timeout: 15000, // 15 seconds timeout
+  timeout: 30000, // 30 seconds timeout
 });
 
 // Request interceptor

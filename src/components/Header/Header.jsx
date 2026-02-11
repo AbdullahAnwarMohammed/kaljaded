@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import "./Header.css"
 import "./AppBanner.css"
 import "./AppBannerStoreLinks.css"
+import "./SidebarHeader.css"
 import Logo from "../../assets/logo.png";
 import ArImage from "../../assets/ar.png";
 import EnImage from "../../assets/en.png";
@@ -17,16 +18,29 @@ import { useCart } from "../../context/CartContext";
 
 import AppleStore from "../../assets/applestore.png"
 import GooglePlay from "../../assets/googleplay.png"
+import Api from "../../Services/Api";
 
 const Header = () => {
   const { t, i18n } = useTranslation();
   const [openMenu, setOpenMenu] = useState(false);
   const [languagePopup, setLanguagePopup] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const { fetchCart, setCart } = useCart(); // Access cart methods
+  const { fetchCart, setCart } = useCart();
   const [downloadLink, setDownloadLink] = useState("https://play.google.com/store/apps/details?id=kaljaded.com");
-  const [shouldRenderBanner, setShouldRenderBanner] = useState(false);
-  const [isBannerClosing, setIsBannerClosing] = useState(false);
+  
+  const [isBannerMounted, setIsBannerMounted] = useState(false);
+  const [isBannerVisible, setIsBannerVisible] = useState(false);
+  const [stats, setStats] = useState({ daily: [], monthly: [] });
+
+  useEffect(() => {
+      if (openMenu) {
+          Api.get('/site-stats', { skipLoader: true }).then(res => {
+              if (res.data.success) {
+                  setStats(res.data.data);
+              }
+          }).catch(err => console.error(err));
+      }
+  }, [openMenu]);
 
   const navigate = useNavigate();
 
@@ -39,32 +53,35 @@ const Header = () => {
       setDownloadLink("https://apps.apple.com/us/app/%D9%83%D8%A7%D9%84%D8%AC%D8%AF%D9%8A%D8%AF/id6746918468");
     }
 
-    // Show banner after 5 seconds
-    const timer = setTimeout(() => {
-      setShouldRenderBanner(true);
+    // Initial show delay
+    const mountTimer = setTimeout(() => {
+      setIsBannerMounted(true);
+      // Small delay to allow unique render before applying transition class
+      requestAnimationFrame(() => {
+        setIsBannerVisible(true);
+      });
     }, 4500);
 
-    return () => clearTimeout(timer);
+    return () => clearTimeout(mountTimer);
   }, []);
 
   const handleCloseBanner = () => {
-    setIsBannerClosing(true);
+    setIsBannerVisible(false); // Trigger fade out / slide up
     setTimeout(() => {
-      setShouldRenderBanner(false);
-      setIsBannerClosing(false); // Reset for potential re-show if logic changes later
-    }, 1000); // Match animation duration
+      setIsBannerMounted(false); // Unmount after animation matches CSS duration (2s)
+    }, 2000); 
   };
 
-  // Auto-close banner after 7 seconds if not interacted with
+  // Auto-close banner after it becomes visible
   useEffect(() => {
     let autoCloseTimer;
-    if (shouldRenderBanner) {
+    if (isBannerVisible) {
       autoCloseTimer = setTimeout(() => {
         handleCloseBanner();
       }, 7000);
     }
     return () => clearTimeout(autoCloseTimer);
-  }, [shouldRenderBanner]);
+  }, [isBannerVisible]);
 
   const handleLogout = async () => {
     localStorage.removeItem("customer_token");
@@ -87,8 +104,8 @@ const Header = () => {
 
   return (
     <>
-      {shouldRenderBanner && (
-        <div className={`app-banner ${isBannerClosing ? 'closing' : 'opening'}`}>
+      {isBannerMounted && (
+        <div className={`app-banner ${isBannerVisible ? 'visible' : ''}`}>
           <div className="container">
             <div className="banner-content">
               <div className="close-banner" onClick={handleCloseBanner}>
@@ -123,11 +140,13 @@ const Header = () => {
 
       {openMenu && <div className="overlay" onClick={() => setOpenMenu(false)}></div>}
 
-      <div className={`side-menu ${openMenu ? "show" : ""}`}>
-        <div className="close-btn" onClick={() => setOpenMenu(false)}>
-          <RiCloseLine />
+      <div className={`side-menu ${openMenu ? "show" : ""}`} style={{ display: 'flex', flexDirection: 'column' }}>
+        <div className="side-menu-header">
+          <div className="close-btn" onClick={() => setOpenMenu(false)}>
+            <RiCloseLine />
+          </div>
+          <img src={Logo} className='logo-menu' alt="Logo" />
         </div>
-        <img src={Logo} className='logo-menu' alt="Logo" />
         <ul>
           {isLoggedIn ? (
             <li onClick={handleLogout}><FaRegUserCircle /> {t("logout")}</li>
@@ -141,6 +160,28 @@ const Header = () => {
           <li><Link to="/privacy-policy"><MdOutlinePrivacyTip /> {t("privacy_policy")}</Link></li>
           <li onClick={() => setLanguagePopup(true)}><MdLanguage /> {t("choose_language")}</li>
         </ul>
+
+         {/* Simple Stats Display: Bottom, No Text, Daily Right, Monthly Left */}
+        <div className="sidebar-stats" style={{ 
+            padding: '15px 0px', 
+      
+         
+            display: 'flex', 
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            fontSize: '13px',
+            color: 'rgb(38 38 38)',
+        }}>
+           {/* Monthly (Left side in RTL is the 'end' of flex container) */}
+           <div title={t('this_month')}>
+             {stats.monthly?.[0]?.total_visits || 0}
+           </div>
+
+           {/* Daily (Right side in RTL is the 'start' of flex container) */}
+           <div title={t('today')}>
+             {stats.daily?.[0]?.total_visits || 0}
+           </div>
+        </div>
       </div>
 
       {languagePopup && (

@@ -1,0 +1,59 @@
+.empty-state-svg-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.box-animation {
+    animation: floatBox 3s ease-in-out infinite;
+    transform-origin: center;
+}
+
+.shadow-pulse {
+    animation: shadowScale 3s ease-in-out infinite;
+    transform-origin: center;
+}
+
+.float-particle {
+    animation: floatParticle 4s ease-in-out infinite;
+}
+
+.p1 { animation-delay: 0s; }
+.p2 { animation-delay: 1s; }
+.p3 { animation-delay: 2s; }
+.p4 { animation-delay: 1.5s; }
+
+.flap-left {
+    animation: flapWave 3s ease-in-out infinite;
+    transform-origin: 60px 110px;
+}
+
+.flap-right {
+    animation: flapWaveRight 3s ease-in-out infinite;
+    transform-origin: 140px 110px;
+}
+
+@keyframes floatBox {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+}
+
+@keyframes shadowScale {
+    0%, 100% { transform: scale(1); opacity: 0.1; }
+    50% { transform: scale(0.8); opacity: 0.05; }
+}
+
+@keyframes floatParticle {
+    0%, 100% { transform: translate(0, 0); opacity: 0.5; }
+    50% { transform: translate(5px, -10px); opacity: 1; }
+}
+
+@keyframes flapWave {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(-5deg); }
+}
+
+@keyframes flapWaveRight {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(5deg); }
+}

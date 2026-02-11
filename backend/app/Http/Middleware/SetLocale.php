@@ -13,7 +13,6 @@ class SetLocale
     {
         $locale = session('locale', config('app.locale'));
         App::setLocale($locale);
-
         return $next($request);
     }
 }

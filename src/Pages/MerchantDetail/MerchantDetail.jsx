@@ -10,6 +10,7 @@ import { FaPhoneAlt } from "react-icons/fa";
 import { FaStar, FaStarHalfAlt } from "react-icons/fa";
 import { TbMoodEmpty } from "react-icons/tb";
 import { LoadingContext } from "../../context/LoadingContext";
+import { useTranslation } from "react-i18next";
 
 // دالة لرسم النجوم ديناميكياً
 const renderStars = (rating) => {
@@ -41,6 +42,7 @@ const useDebounce = (value, delay) => {
 };
 
 const MerchantDetail = () => {
+    const { t } = useTranslation();
     const { id } = useParams();
     const location = useLocation();
     const { loading: globalLoading } = useContext(LoadingContext);
@@ -234,7 +236,7 @@ const MerchantDetail = () => {
             }
         } catch (err) {
             console.error("Error submitting review:", err.response?.data || err.message);
-            alert("حدث خطأ أثناء إرسال التقييم: " + (err.response?.data?.message || ""));
+            alert(t('merchant_detail.error_sending_review') + " " + (err.response?.data?.message || ""));
         } finally {
             setSubmittingReview(false);
         }
@@ -250,12 +252,12 @@ const MerchantDetail = () => {
                     <Link to="/merchants" className="icon-back">
                         <RiArrowRightLine />
                     </Link>
-                    <h6>غير موجود</h6>
+                    <h6 style={{ marginBottom: "10px" }}>{t('merchant_detail.not_found_header')}</h6>
                 </div>
                 <div style={{ textAlign: "center", padding: "100px 20px" }}>
                     <TbMoodEmpty style={{ fontSize: "5rem", color: "#ddd", marginBottom: "20px" }} />
-                    <h3 style={{ color: "#2c3e50" }}>عذراً، هذا التاجر غير متاح حالياً</h3>
-                    <Link to="/merchants" style={{ color: "#435293", textDecoration: "underline", marginTop: "10px", display: "inline-block" }}>العودة للمقاولين</Link>
+                    <h3 style={{ color: "#2c3e50" }}>{t('merchant_detail.not_found_message')}</h3>
+                    <Link to="/merchants" style={{ color: "#435293", textDecoration: "underline", marginTop: "10px", display: "inline-block" }}>{t('merchant_detail.back_to_merchants')}</Link>
                 </div>
             </div>
         );
@@ -278,12 +280,12 @@ const MerchantDetail = () => {
                 <div className="info">
                     <div className="left">
 
-                        <a href={`tel:${merchant.phone_vendor || merchant.phone}`} className="phone-icon">
+                        <a href={`tel:96567691171`} className="phone-icon">
                             <FaPhoneAlt />
                         </a>
 
                         <a 
-                            href={`https://wa.me/${merchant.phone_vendor || merchant.phone}`} 
+                            href={`https://wa.me/96567691171`} 
                             target="_blank" 
                             rel="noopener noreferrer" 
                             className="whatsapp-icon"
@@ -294,7 +296,7 @@ const MerchantDetail = () => {
 
                     <div className="right">
                         <div className="icon">
-                            <small>{merchant.average_rating ?? "0.0"}</small>
+                            {merchant.average_rating > 0 && <small>{merchant.average_rating}</small>}
                             <div style={{ display: "flex", gap: "2px", alignItems: "center" }}>
                                 {renderStars(merchant.average_rating ?? 0)}
                             </div>
@@ -312,13 +314,13 @@ const MerchantDetail = () => {
                                 className={activeTab === "products" ? "active" : ""} 
                                 onClick={() => setActiveTab("products")}
                             >
-                                المنتجات
+                                {t('products')}
                             </button>
                             <button 
                                 className={activeTab === "reviews" ? "active" : ""} 
                                 onClick={() => setActiveTab("reviews")}
                             >
-                                التقيمات
+                                {t('merchant_detail.customer_reviews')}
                             </button>
                         </div>
                     </div>
@@ -331,7 +333,7 @@ const MerchantDetail = () => {
                                     type="text"
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
-                                    placeholder="ابحث في منتجات التاجر..."
+                                    placeholder={t('merchant_detail.search_placeholder')}
                                     style={{
                                         width: "100%",
                                         padding: "12px 15px",
@@ -372,7 +374,8 @@ const MerchantDetail = () => {
                                         {products.map((product) => <ProductCard key={product.id} p={product} showFastBadge={true} />)}
                                     </div>
                                 ) : (
-                                    <p className="empty-products">لا توجد منتجات لهذا التاجر  <TbMoodEmpty /></p>
+
+                                    <p className="empty-products">{t('merchant_detail.no_products')}  <TbMoodEmpty /></p>
                                 )}
                             </div>
                         ) : (
@@ -381,11 +384,16 @@ const MerchantDetail = () => {
                                 {/* Summary Cards */}
                                 <div className="reviews-summary">
                                     <div className="review-summary-card">
-                                        <h3>{merchant.average_rating ?? "0.0"}</h3>
+                                        {Number(merchant.average_rating) > 0 && <h3>{merchant.average_rating}</h3>}
                                         <div className="stars">
                                             {renderStars(merchant.average_rating ?? 0)}
                                         </div>
-                                        <span className="sub-text">({merchant.reviews_count ?? 0} تقييم)</span>
+                                        <span className="sub-text">
+                                            {merchant.reviews_count > 0 
+                                                ? `(${merchant.reviews_count} ${t('merchant_detail.reviews_count_suffix')})`
+                                                : `(${t('no_ratings') || 'لا يوجد تقييمات'})`
+                                            }
+                                        </span>
                                         <div className="progress-bar">
                                             <div 
                                                 className="progress-bar-fill" 
@@ -394,17 +402,17 @@ const MerchantDetail = () => {
                                         </div>
                                     </div>
                                     <div className="review-summary-card">
-                                        <div className="icon-sales"><RiShoppingCart2Line /></div>
-                                        <h3>{salesCount > 0 ? salesCount : "0"}</h3>
-                                        <span className="sub-text">عدد المبيعات</span>
+                                        <h3 style={{ fontSize: '2.5rem', marginBottom: '0', color: '#2d2e83' }}>{salesCount > 0 ? salesCount : "0"}</h3>
+                                        <div style={{ fontSize: '1.8rem', color: '#2d2e83', margin: '5px 0' }}><RiShoppingCart2Line /></div>
+                                        <span className="sub-text">{t('merchant_detail.sales_count')}</span>
                                     </div>
                                 </div>
 
-                                <div className="section-divider">تعليقات العملاء</div>
+                                <div className="section-divider">{t('merchant_detail.customer_reviews')}</div>
 
                                 {reviewEligibility.allowed ? (
                                     <div className="add-review-box" style={{ background: "#fff", padding: "20px", borderRadius: "15px", marginBottom: "20px", boxShadow: "0 5px 15px rgba(0,0,0,0.05)" }}>
-                                        <h5 style={{ margin: "0 0 10px 0" }}>أضف تقييمك</h5>
+                                        <h5 style={{ margin: "0 0 10px 0" }}>{t('merchant_detail.add_review')}</h5>
                                         <div style={{ marginBottom: "10px" }}>
                                             {[1, 2, 3, 4, 5].map((star) => (
                                                 <span key={star} onClick={() => setNewReview({ ...newReview, rating: star })} style={{ cursor: "pointer", fontSize: "1.5rem", color: star <= newReview.rating ? "#ffc107" : "#ddd" }}>
@@ -412,29 +420,29 @@ const MerchantDetail = () => {
                                                 </span>
                                             ))}
                                         </div>
-                                        <textarea className="form-control" rows="3" placeholder="اكتب تعليقك هنا..." value={newReview.comment} onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })} style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #ddd", marginBottom: "10px", outline: "none" }}></textarea>
+                                        <textarea className="form-control" rows="3" placeholder={t('merchant_detail.write_comment_placeholder')} value={newReview.comment} onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })} style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #ddd", marginBottom: "10px", outline: "none" }}></textarea>
                                         <button className="btn-submit-review" onClick={handleSubmitReview} disabled={submittingReview} style={{ background: "#2c3e50", color: "#fff", border: "none", padding: "10px 20px", borderRadius: "25px", cursor: "pointer", fontWeight: "bold" }}>
-                                            {submittingReview ? "جاري الإرسال..." : "إرسال التقييم"}
+                                            {submittingReview ? t('merchant_detail.submitting') : t('merchant_detail.submit_review')}
                                         </button>
                                     </div>
                                 ) : reviewEligibility.message === "wait_for_cooldown" && (
                                     <div className="add-review-box" style={{ background: "#fff3cd", color: "#856404", padding: "20px", borderRadius: "15px", marginBottom: "20px", border: "1px solid #ffeeba", textAlign: "center" }}>
-                                        <h5 style={{ margin: "0 0 10px 0", fontWeight: "bold" }}>يرجى الانتظار لتقييم البائع</h5>
+                                        <h5 style={{ margin: "0 0 10px 0", fontWeight: "bold" }}>{t('merchant_detail.wait_to_rate')}</h5>
                                         <p style={{ fontSize: "1.2rem", direction: "ltr" }}>{formatTime(countdown)}</p>
-                                        <small>يمكنك ترك تقييم بعد مرور ساعة من الشراء</small>
+                                        <small>{t('merchant_detail.wait_desc')}</small>
                                     </div>
                                 )}
 
                                 <div className="reviews-list">
                                     {loadingReviews ? (
-                                        <p style={{ gridColumn: "1/-1", textAlign: "center" }}>جاري تحميل التقيمات...</p>
+                                        <p style={{ gridColumn: "1/-1", textAlign: "center" }}>{t('merchant_detail.loading_reviews')}</p>
                                     ) : reviews.length > 0 ? (
                                         reviews.map((review) => (
                                             <div className="review-card" key={review.id}>
                                                 <div className="avatar-circle" style={{ background: "#2c3e50" }}>{review.user?.name ? review.user.name.charAt(0) : "U"}</div>
                                                 <div className="review-content">
                                                     <div className="review-header">
-                                                        <h5>{review.user?.name || "مستخدم"}</h5>
+                                                        <h5>{review.user?.name || t('merchant_detail.user_fallback')}</h5>
                                                         <span className="date">{new Date(review.created_at).toLocaleDateString('ar-EG')}</span>
                                                     </div>
                                                     <div className="rating-stars">
@@ -450,18 +458,18 @@ const MerchantDetail = () => {
                                         !reviewEligibility.allowed && reviewEligibility.message !== "wait_for_cooldown" ? (
                                             <div style={{ gridColumn: "1/-1", textAlign: "center", padding: "40px 0", color: "#888" }}>
                                                 <TbMoodEmpty style={{ fontSize: "3rem", marginBottom: "10px" }} />
-                                                <p style={{ fontSize: "1.1rem", fontWeight: "bold" }}>قم بشراء المنتج اولاً وقيم البائع</p>
+                                                <p style={{ fontSize: "1.1rem", fontWeight: "bold" }}>{t('merchant_detail.buy_first')}</p>
                                             </div>
                                         ) : (
                                             <div className="empty-reviews-state">
                                                 <TbMoodEmpty />
-                                                <p>لا توجد تقييمات بعد، كن أول من يقيم!</p>
+                                                <p>{t('merchant_detail.no_reviews_yet')}</p>
                                             </div>
                                         )
                                     )}
                                     {reviews.length > 0 && hasMoreReviews && (
                                         <div ref={lastReviewElementRef} style={{ gridColumn: "1/-1", height: "20px", margin: "10px 0" }}>
-                                            {isFetchingMoreReviews && <p style={{ textAlign: "center" }}>جاري تحميل المزيد...</p>}
+                                            {isFetchingMoreReviews && <p style={{ textAlign: "center" }}>{t('merchant_detail.loading_more')}</p>}
                                         </div>
                                     )}
                                 </div>

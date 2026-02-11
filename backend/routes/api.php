@@ -15,6 +15,8 @@ use App\Http\Controllers\Api\User\OrderController;
 use App\Http\Controllers\Api\User\ProductCustomerController;
 use App\Http\Controllers\Api\User\SiteVisitController;
 use App\Http\Controllers\Api\PaymentMyFatoorahController;
+use App\Http\Controllers\Api\User\WhatsAppController;
+
 use Illuminate\Support\Facades\Route;
 
 
@@ -24,10 +26,14 @@ Route::middleware('SetLanguageFromHeader')->group(function () {
 
 
     Route::prefix("user")->group(function () {
-                    Route::get('/temp-duplicate', [PaymentDemaController::class, 'tempDuplicateOrder']);
+        Route::post('/send-whatsapp', [WhatsAppController::class, 'send']);
+        
+        Route::get('/temp-duplicate', [PaymentDemaController::class, 'tempDuplicateOrder']);
 
-        Route::post('/register', [AuthController::class, 'register']);
-        Route::post('/login', [AuthController::class, 'login']);
+        Route::post('/send-otp', [AuthController::class, 'sendOtp']);
+        Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
+        // Route::post('/register', [AuthController::class, 'register']);
+        // Route::post('/login', [AuthController::class, 'login']);
         Route::middleware('auth:sanctum')->get('/profile', [AuthController::class, 'profile']);
         Route::middleware('auth:sanctum')->post('/profile/update', [AuthController::class, 'updateProfile']);
 
@@ -126,4 +132,7 @@ Route::middleware('SetLanguageFromHeader')->group(function () {
         Route::get('/site-stats', [SiteVisitController::class, 'index']);
 
     });
+
+
+
 });

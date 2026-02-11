@@ -49,4 +49,14 @@ return [
     'live_url' => env('MYFATOORAH_LIVE_URL'),
 ],
 
+
+
+
+
+
+    'wasender' => [
+        'base_url' => env('WASENDER_BASE_URL', 'https://wasenderapi.com/api'),
+        'api_key'  => env('WASENDER_API_KEY'),
+    ],
+
 ];

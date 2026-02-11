@@ -45,3 +45,10 @@ input:focus {
   align-items: center;
   gap: 10px;
 }
+
+div:where(.swal2-container) h2:where(.swal2-title){
+  font-size: 16px !important;
+}
+div:where(.swal2-container) div:where(.swal2-html-container){
+  font-size: 14px !important;
+}

@@ -12,44 +12,83 @@ use App\Models\User;
 use App\Traits\ApiResponseTrait;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
+use App\Services\WaSenderApiService;
+use Illuminate\Support\Facades\Cache;
 
 class AuthController extends Controller
 {
 
     use ApiResponseTrait;
-    public function register(RegisterRequest $request)
+    public function sendOtp(Request $request, WaSenderApiService $waSender)
     {
-        $user = User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'phone' => $request->phone,
-            'password' => $request->password,
-            'role' => 1,
+        $request->validate(['phone' => 'required']);
+
+        $phone = $request->phone;
+        
+        // Find or create user
+        $user = User::firstOrCreate(
+            ['phone' => $phone],
+            ['name' => 'User ' . substr($phone, -4)] 
+        );
+
+        // Check if OTP is still valid (throttle)
+        if ($user->otp_expires_at && $user->otp_expires_at->isFuture()) {
+             return $this->errorResponse('Please wait before resending OTP', 429);
+        }
+
+        // Generate 4-digit OTP
+        $otp = rand(1000, 9999);
+
+        // Update User
+        $user->update([
+            'otp_code' => $otp,
+            'otp_expires_at' => now()->addSeconds(60)
         ]);
-        $token = $user->createToken('api_token')->plainTextToken;
-        return $this->successResponse([
-            'user'  => new UserResource($user),
-            'token' => $token,
-        ], 'messages.register_success');
+
+        \Illuminate\Support\Facades\Log::info("OTP for {$phone}: {$otp}");
+
+        // Send via WhatsApp
+        try {
+             $waSender->sendTextMessage($phone, "Your OTP code is: $otp");
+        } catch (\Exception $e) {
+            // Log error
+        }
+
+        return $this->successResponse(['message' => 'OTP sent successfully'], 'messages.otp_sent');
     }
 
-    public function login(LoginRequest $request)
+    public function verifyOtp(Request $request)
     {
-        $identifier = $request->name_or_phone;
-        $user = User::where('name', $identifier)
-            ->orWhere('phone', $identifier)
-            ->first();
-        if (! $user) {
-            throw ValidationException::withMessages([
-                'name_or_phone' => [__('messages.invalid_credentials')],
+        $request->validate([
+            'phone' => 'required',
+            'code'  => 'required'
+        ]);
+
+        $phone = $request->phone;
+        $code  = $request->code;
+
+        $user = User::where('phone', $phone)->first();
+
+        if (! $user || $user->otp_code != $code) {
+             throw ValidationException::withMessages([
+                'code' => [__('messages.invalid_otp')],
             ]);
         }
-        if ($request->filled('password') && $request->password != $user->password) {
-            throw ValidationException::withMessages([
-                'password' => [__('messages.invalid_credentials')],
+
+        if ($user->otp_expires_at && $user->otp_expires_at->isPast()) {
+             throw ValidationException::withMessages([
+                'code' => ['OTP returned expired'],
             ]);
         }
+
+        // OTP is valid, clear it
+        $user->update([
+            'otp_code' => null,
+            'otp_expires_at' => null
+        ]);
+
         $token = $user->createToken('api_token')->plainTextToken;
+
         return $this->successResponse([
             'user'  => new UserResource($user),
             'token' => $token,
