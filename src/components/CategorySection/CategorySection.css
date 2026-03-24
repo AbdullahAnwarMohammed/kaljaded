@@ -12,6 +12,7 @@
   overflow: hidden;         /* Hide overflow */
   text-overflow: ellipsis;  /* Add ellipsis (...) */
   display: block;           /* Ensure it respects width */
+  min-height: 18px;         /* Consistent height even if empty */
 }
 
 /* القسم */
@@ -92,6 +93,14 @@
   padding: 0 5px 10px 5px; /* Added bottom padding */
 }
 
+/* Ensure consistent height for optional badges */
+.product-card .badge-container {
+  min-height: 26px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
 /* Info One (Green Badge) */
 .product-card .info-one {
   display: flex;
@@ -134,6 +143,18 @@
   font-weight: bold;
   font-size: 10px;
   margin: 0;
+}
+
+.product-card .merchant-link {
+  font-size: 10px;
+  color: #283158;
+  text-decoration: underline;
+  font-weight: bold;
+  max-width: 80px;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Buttons */

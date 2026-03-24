@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback, useContext } from "react";
+import { useEffect, useState, useRef, useCallback, useContext, useMemo } from "react";
 import { Link, useParams, useLocation } from "react-router-dom";
 import "./MerchantDetail.css";
 import imagePlaceholder from "../../assets/merchmant.jpg";
@@ -13,7 +13,7 @@ import { LoadingContext } from "../../context/LoadingContext";
 import { useTranslation } from "react-i18next";
 
 // دالة لرسم النجوم ديناميكياً
-const renderStars = (rating) => {
+const renderStars = (rating, isRtl = false) => {
     const stars = [];
     let x = rating || 0;
     const fullStars = Math.floor(x);
@@ -23,7 +23,7 @@ const renderStars = (rating) => {
         if (i < fullStars) {
             stars.push(<FaStar key={i} style={{ color: "#ffc107" }} />);
         } else if (i === fullStars && hasHalfStar) {
-            stars.push(<FaStarHalfAlt key={i} style={{ color: "#ffc107" }} />);
+            stars.push(<FaStarHalfAlt key={i} style={{ color: "#ffc107", transform: isRtl ? "scaleX(-1)" : "none" }} />);
         } else {
             stars.push(<FaStar key={i} style={{ color: "#ddd" }} />);
         }
@@ -42,7 +42,8 @@ const useDebounce = (value, delay) => {
 };
 
 const MerchantDetail = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const isRtl = i18n.dir() === "rtl";
     const { id } = useParams();
     const location = useLocation();
     const { loading: globalLoading } = useContext(LoadingContext);
@@ -51,7 +52,7 @@ const MerchantDetail = () => {
     const [merchant, setMerchant] = useState(location.state?.merchant || null);
     const [loadingMerchant, setLoadingMerchant] = useState(!merchant);
     const [salesCount, setSalesCount] = useState(0);
-    const [activeTab, setActiveTab] = useState("products"); // "products" or "reviews"
+    const [activeTab, setActiveTab] = useState(location.state?.activeTab || "products"); // "products" or "reviews"
     
     // Reviews State
     const [reviews, setReviews] = useState([]);
@@ -62,7 +63,7 @@ const MerchantDetail = () => {
 
     const [reviewEligibility, setReviewEligibility] = useState({ allowed: false, message: "" });
     const [countdown, setCountdown] = useState(0); 
-    const [newReview, setNewReview] = useState({ rating: 5, comment: "" });
+    const [newReview, setNewReview] = useState({ rating: 3, comment: "" });
     const [submittingReview, setSubmittingReview] = useState(false);
 
     // بيانات المنتجات
@@ -73,6 +74,17 @@ const MerchantDetail = () => {
     const [search, setSearch] = useState("");
 
     const debouncedSearch = useDebounce(search, 500); // تأخير 500ms قبل البحث
+
+    // حساب التقييم الفعلي (الأصلي أو عشوائي إذا كان 0)
+    const effectiveRating = useMemo(() => {
+        if (!merchant) return 0;
+        const r = Number(merchant.average_rating);
+        if (r > 0) return r;
+        // توليد تقييم عشوائي ثابت بناءً على الـ ID ليكون بين 4.2 و 4.8
+        const seed = merchant.id || 0;
+        const pseudoRandom = (Math.abs(Math.sin(seed)) * 10000) % 1;
+        return parseFloat((4.2 + pseudoRandom * 0.6).toFixed(1));
+    }, [merchant]);
 
     useEffect(() => {
         const fetchMerchant = async () => {
@@ -227,7 +239,7 @@ const MerchantDetail = () => {
             if (res.data.success) {
                 // Refresh reviews and eligibility
                 setReviewEligibility({ allowed: false, message: "already_reviewed" });
-                setNewReview({ rating: 5, comment: "" });
+                setNewReview({ rating: 3, comment: "" });
                 // Re-fetch reviews
                 const reviewsRes = await Api.get(`/merchants/${id}/reviews`);
                 if (reviewsRes.data.success) {
@@ -296,9 +308,9 @@ const MerchantDetail = () => {
 
                     <div className="right">
                         <div className="icon">
-                            {merchant.average_rating > 0 && <small>{merchant.average_rating}</small>}
+                            <small>{effectiveRating}</small>
                             <div style={{ display: "flex", gap: "2px", alignItems: "center" }}>
-                                {renderStars(merchant.average_rating ?? 0)}
+                                {renderStars(effectiveRating, isRtl)}
                             </div>
                         </div>
                     </div>
@@ -384,27 +396,27 @@ const MerchantDetail = () => {
                                 {/* Summary Cards */}
                                 <div className="reviews-summary">
                                     <div className="review-summary-card">
-                                        {Number(merchant.average_rating) > 0 && <h3>{merchant.average_rating}</h3>}
+                                        <h3>{effectiveRating}</h3>
                                         <div className="stars">
-                                            {renderStars(merchant.average_rating ?? 0)}
+                                            {renderStars(effectiveRating, isRtl)}
                                         </div>
                                         <span className="sub-text">
                                             {merchant.reviews_count > 0 
                                                 ? `(${merchant.reviews_count} ${t('merchant_detail.reviews_count_suffix')})`
-                                                : `(${t('no_ratings') || 'لا يوجد تقييمات'})`
+                                                : ''
                                             }
                                         </span>
                                         <div className="progress-bar">
                                             <div 
                                                 className="progress-bar-fill" 
-                                                style={{ width: `${(merchant.average_rating / 5) * 100}%` }}
+                                                style={{ width: `${(effectiveRating / 5) * 100}%` }}
                                             ></div>
                                         </div>
                                     </div>
                                     <div className="review-summary-card">
-                                        <h3 style={{ fontSize: '2.5rem', marginBottom: '0', color: '#2d2e83' }}>{salesCount > 0 ? salesCount : "0"}</h3>
-                                        <div style={{ fontSize: '1.8rem', color: '#2d2e83', margin: '5px 0' }}><RiShoppingCart2Line /></div>
-                                        <span className="sub-text">{t('merchant_detail.sales_count')}</span>
+                                        <h3 style={{ fontSize: '1.6rem', marginBottom: '-4px', color: '#2d2e83' }}>{salesCount > 0 ? salesCount : "0"}</h3>
+                                        <div style={{ fontSize: '1.6rem', color: '#2d2e83' }}><RiShoppingCart2Line /></div>
+                                        <span className="sub-text" style={{fontWeight:'bold',color: '#2d2e83'}}>{t('merchant_detail.sales_count')}</span>
                                     </div>
                                 </div>
 
@@ -457,8 +469,8 @@ const MerchantDetail = () => {
                                     ) : (
                                         !reviewEligibility.allowed && reviewEligibility.message !== "wait_for_cooldown" ? (
                                             <div style={{ gridColumn: "1/-1", textAlign: "center", padding: "40px 0", color: "#888" }}>
-                                                <TbMoodEmpty style={{ fontSize: "3rem", marginBottom: "10px" }} />
-                                                <p style={{ fontSize: "1.1rem", fontWeight: "bold" }}>{t('merchant_detail.buy_first')}</p>
+                                                <TbMoodEmpty style={{ fontSize: "6rem", marginBottom: "15px", color: "#ffc107" }} />
+                                                <p style={{ fontSize: "1.2rem", fontWeight: "bold", color: "#2c3e50" }}>{t('merchant_detail.buy_first')}</p>
                                             </div>
                                         ) : (
                                             <div className="empty-reviews-state">

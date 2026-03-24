@@ -10,10 +10,12 @@
   text-align: center;
   gap: 30px;
 }
-.login-customer-page .logo {
-  width: 250px;
+.login-customer-page .login-header-text {
+  margin-bottom: 20px;
 }
-
+.login-customer-page .login-header-text h2 {
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
 .login-customer-page .icon-back {
   position: absolute;
   top: 10px;
@@ -21,24 +23,53 @@
   font-size: 32px;
   color: #fff;
 }
-.login-customer-page .input-wrapper {
-  position: relative;
+.login-customer-page .logo {
+  display: none;
 }
 
-.login-customer-page .field-icon {
-  position: absolute;
-  right: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 20px;
-  color: #888;
+.login-customer-page .custom-phone-input {
+  display: flex;
+  align-items: center;
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 0 15px;
+  overflow: hidden;
+  height: 60px;
+  direction: ltr; /* Force left-to-right for phone input layout */
 }
 
-/* إزاحة النص داخل الإنبت بعيد عن الأيقونة */
-.login-customer-page .input-wrapper input {
-  padding-right: 48px;
-  width: 100%; /* Ensure input takes full width of wrapper */
-  box-sizing: border-box; /* Include padding/border in width */
+.login-customer-page .phone-prefix {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #435292;
+  font-weight: bold;
+  font-size: 18px;
+  direction: ltr;
+}
+
+.login-customer-page .prefix-icon {
+  font-size: 22px;
+}
+
+.login-customer-page .input-divider {
+  width: 1px;
+  height: 30px;
+  background-color: #435292;
+  margin: 0 15px;
+  opacity: 0.3;
+}
+
+.login-customer-page .custom-phone-input input {
+  flex: 1;
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  font-size: 18px !important;
+  color: #435292 !important;
+  outline: none;
+  height: 100%;
 }
 
 /* زر إظهار/إخفاء كلمة المرور */
@@ -57,13 +88,14 @@
 }
 
 .login-customer-page .app-login input {
-    padding: 17px 40px;
-    margin: 7px 0;
-    border-radius: 10px;
-    border: none;
-    background-color: #fff;
-    font-size: 14px;
-    font-weight: bold;
+  padding: 17px 40px;
+  margin: 7px 0;
+  border-radius: 10px;
+  border: none;
+  background-color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  color: #435292;
 }
 .login-customer-page .app-login h3:first-child {
   font-size: 17px;
@@ -82,7 +114,7 @@
   display: flex;
   justify-content: center;
   gap: 15px; /* Increased gap */
-  direction: ltr; 
+  direction: ltr;
   margin-bottom: 20px;
 }
 
@@ -95,7 +127,7 @@
   font-weight: bold;
   text-align: center;
   border: 2px solid #ddd; /* Thicker border */
-  border-radius: 50% !important;
+  border-radius: 18% !important;
   background-color: #fff;
   color: #333; /* Ensure text is visible */
   transition: all 0.3s ease;
@@ -114,7 +146,7 @@
   font-size: 14px;
   color: #fff;
   font-weight: bold;
-      margin-bottom: 13px;
+  margin-bottom: 13px;
 }
 
 .resend-btn {
@@ -133,13 +165,16 @@
 }
 .login-customer-page .app-login form {
   margin-bottom: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 .login-customer-page .app-login form button {
-  width: 80%;
+  width: 100%;
   background: none;
-  border: 2px solid #fff;
+  border: 1px solid #fff;
   color: #fff;
-  padding: 10px;
+  padding: 14px 10px;
   border-radius: 10px;
   text-decoration: none;
 }
@@ -178,6 +213,13 @@
   background-color: #fff0f0;
 }
 
+/* Force red border on error state, overriding other border styles */
+.otp-input.input-error {
+  border-color: #ff6b6b !important;
+  background-color: #fff0f0;
+  color: #ff6b6b !important; /* Make text red on error */
+}
+
 .login-customer-page .general-error {
   background-color: rgba(255, 107, 107, 0.2);
   color: #ff6b6b;
@@ -187,4 +229,195 @@
   margin-bottom: 20px;
   font-size: 14px;
   font-weight: bold;
+}
+
+.login-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 10px 0;
+  color: #fff;
+  opacity: 0.8;
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.login-divider span {
+  padding: 0 15px;
+  font-size: 14px;
+}
+
+.google-login-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background-color: #fff !important;
+  color: #435292 !important;
+  border: none !important;
+  width: 100%;
+  padding: 14px 10px;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.google-login-btn:hover {
+  background-color: #f1f1f1 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.google-icon {
+  font-size: 20px;
+  color: #ea4335; /* Google Red */
+}
+
+/* Premium Swal Styling */
+.premium-swal-popup {
+  border-radius: 20px !important;
+  padding: 2em !important;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.2) !important;
+}
+
+.premium-swal-title {
+  color: #435292 !important;
+  font-family: inherit !important;
+  font-size: 1.8rem !important;
+}
+
+.premium-swal-button {
+  padding: 12px 35px !important;
+  font-size: 1.1rem !important;
+  border-radius: 12px !important;
+  font-weight: bold !important;
+  transition: all 0.3s ease !important;
+}
+
+.premium-swal-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px rgba(67, 82, 146, 0.3) !important;
+}
+/* Service Not Available View - Premium Revamp */
+.service-not-available {
+    background: linear-gradient(145deg, rgba(47, 58, 103, 0.95), rgba(35, 43, 80, 0.98));
+    backdrop-filter: blur(20px);
+    padding: 60px 40px;
+    border-radius: 40px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 20px auto;
+    max-width: 450px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 
+                inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    animation: premiumFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.service-not-available::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 215, 0, 0.05) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.not-available-icon-wrapper {
+    width: 100px;
+    height: 100px;
+    background: rgba(255, 215, 0, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 25px;
+    border: 1px solid rgba(255, 215, 0, 0.2);
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.1);
+    animation: iconFloat 3s ease-in-out infinite;
+}
+
+.not-available-icon {
+    font-size: 50px;
+    color: #ffd700;
+    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.5));
+}
+
+.service-not-available h3 {
+    font-size: 28px !important;
+    background: linear-gradient(to bottom, #fff, #aeb4d0);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 20px !important;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+}
+
+.service-not-available p {
+    font-size: 17px;
+    color: #e2e8f0;
+    margin-bottom: 35px;
+    line-height: 1.8;
+    font-weight: 400;
+    text-align: center;
+    opacity: 0.9;
+}
+
+.back-home-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: linear-gradient(45deg, #ffd700, #ffb700);
+    color: #44350a !important;
+    padding: 16px 35px;
+    border-radius: 16px;
+    text-decoration: none;
+    font-weight: 800;
+    font-size: 18px;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: none;
+    box-shadow: 0 10px 20px rgba(255, 215, 0, 0.2);
+}
+
+.back-home-btn:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 20px 30px rgba(255, 215, 0, 0.3);
+    background: linear-gradient(45deg, #ffb700, #ffd700);
+}
+
+.back-home-btn svg {
+    font-size: 22px;
+    transition: transform 0.3s ease;
+}
+
+.back-home-btn:hover svg {
+    transform: translateX(-5px);
+}
+
+@keyframes premiumFadeIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(30px) scale(0.95);
+        filter: blur(10px);
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+@keyframes iconFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
 }

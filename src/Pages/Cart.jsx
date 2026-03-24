@@ -122,6 +122,10 @@ const Cart = () => {
         =============================== */}
         {cart && cart.items.length > 0 && (
           <section className="order-summary">
+            <div className="installment-badge">
+              {t('available_installments')}
+            </div>
+            
             <div className="summary-row summary-total">
               <span>{t('total')}:</span>
               <span>{cart.total} K.D</span>
@@ -135,7 +139,7 @@ const Cart = () => {
             </div>
 
             <div className="sum">
-              <span>{t('total')} : </span>
+              <span>{t('total_amount')} : </span>
               <span>{cart.total} K.D</span>
             </div>
 

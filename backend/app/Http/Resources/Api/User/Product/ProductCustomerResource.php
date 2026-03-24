@@ -38,9 +38,11 @@ class ProductCustomerResource extends JsonResource
             'details' => $this->whenLoaded('details'),
             'offers' => ProductCustomerOfferResource::collection($this->whenLoaded('offers')),
             'created_at' => $this->created_at,
+            'expires_at' => $this->created_at ? $this->created_at->addDay() : null,
             'time_ago' => $this->created_at ? $this->created_at->diffForHumans() : null,
             'updated_at' => $this->updated_at,
             'is_sold' => (boolean) $this->is_sold,
+            'auction_status' => (boolean) $this->auction_status,
         ];
     }
 }

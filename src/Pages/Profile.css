@@ -1,0 +1,355 @@
+.profile-page-wrapper {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    padding-bottom: 50px;
+}
+
+.profile-header-sticky {
+    background-color: #0b1528;
+    color: white;
+    padding: 15px 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.header-content h1 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.back-btn {
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.rotate-180 {
+    transform: rotate(180deg);
+}
+
+.logout-icon-btn {
+    font-size: 1.4rem;
+    cursor: pointer;
+    color: #ff6b6b;
+}
+
+.profile-content {
+    margin-top: 20px;
+    padding: 0 15px;
+}
+
+.user-initials-card {
+    background: white;
+    border-radius: 20px;
+    padding: 25px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    margin-bottom: 25px;
+}
+
+.initials-circle {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #0b1528 0%, #1e2a4a 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+    color: white;
+    font-weight: 700;
+}
+
+.user-info-brief h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    color: #0b1528;
+}
+
+.user-info-brief p {
+    margin: 5px 0 0;
+    color: #6c757d;
+    font-family: sans-serif;
+}
+
+.profile-form-section {
+    background: white;
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    margin-bottom: 25px;
+}
+
+.profile-field-group {
+    margin-bottom: 20px;
+}
+
+.profile-field-group label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: #0b1528;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+.edit-phone-trigger {
+    color: #0b1528;
+    font-size: 0.8rem;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.phone-input-row {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-send-otp {
+    background: #0b1528;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 0 15px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.otp-group {
+    background: #fff;
+    padding: 15px;
+    border-radius: 15px;
+    border: 1px dashed #ced4da;
+}
+
+.otp-inputs-wrapper {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 15px 0;
+    direction: ltr !important;
+}
+
+.profile-otp-input {
+    width: 50px !important;
+    height: 50px;
+    text-align: center;
+    font-size: 1.5rem !important;
+    font-weight: bold;
+    border: 1px solid #ced4da !important;
+    background: white !important;
+}
+
+.profile-otp-input:focus {
+    border-color: #0b1528 !important;
+}
+
+.btn-verify-phone {
+    width: 100%;
+    background: #0b1528;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 10px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+
+.otp-cancel {
+    display: block;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #dc3545;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.profile-field-group label svg {
+    color: #0b1528;
+}
+
+.profile-field-group input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1.5px solid #eee;
+    border-radius: 5px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+    outline: none;
+}
+
+.profile-field-group input:focus {
+    border-color: #0b1528;
+}
+
+.profile-field-group.disabled input {
+    background-color: #f8f9fa;
+    color: #adb5bd;
+}
+
+.profile-field-group.disabled span {
+    font-size: 0.75rem;
+    color: #adb5bd;
+    margin-top: 5px;
+    display: block;
+}
+
+.profile-field-row {
+    display: flex;
+    gap: 15px;
+}
+
+.profile-field-row .profile-field-group {
+    flex: 1;
+}
+
+.profile-tabs-nav {
+    display: flex;
+    background: #e9ecef;
+    padding: 5px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.tab-item {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 10px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #495057;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tab-item.active {
+    background: white;
+    color: #0b1528;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.tab-pane {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.profile-select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1.5px solid #e9ecef;
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+    outline: none;
+    background-color: white;
+}
+
+.profile-select:focus {
+    border-color: #0b1528;
+}
+
+.save-profile-btn {
+    width: 100%;
+    background-color: #0b1528;
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.save-profile-btn:disabled {
+    opacity: 0.7;
+}
+
+.profile-quick-links {
+    display: grid;
+    gap: 15px;
+}
+
+.quick-link-item {
+    background: white;
+    padding: 15px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+    transition: transform 0.2s;
+}
+
+.quick-link-item:active {
+    transform: scale(0.98);
+}
+
+.icon-wrap {
+    width: 45px;
+    height: 45px;
+    background: #f0f2f5;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    color: #0b1528;
+}
+
+.text-wrap h3 {
+    margin: 0;
+    font-size: 1rem;
+    color: #0b1528;
+}
+
+.text-wrap p {
+    margin: 2px 0 0;
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.profile-loading {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #0b1528;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+[dir="rtl"] .back-btn {
+    transform: none;
+}

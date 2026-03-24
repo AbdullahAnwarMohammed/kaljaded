@@ -167,7 +167,8 @@
   margin-top: 178px;
   margin-bottom: 100px;
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05); /* Shadow upwards */
-  /* Sticky footer effect on mobile if desired, removing for standard flow */
+  display: flex;
+  flex-direction: column;
 }
 
 .page-carts .summary-row {
@@ -179,8 +180,8 @@
 }
 
 .page-carts .summary-total {
-  margin-top: 15px;
-  padding-top: 15px;
+  margin-top: 5px;
+  padding-top: 5px;
   border-top: 1px dashed #dfe6e9;
   font-size: 1.2rem;
   font-weight: 800;
@@ -193,7 +194,7 @@
   border: 1px solid #8BC34A;
   border-radius: 10px;
   padding: 12px;
-  margin: 20px 0;
+  margin: 10px 0;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -213,7 +214,25 @@
 }
 
 /* Total Row */
+.page-carts .installment-badge {
+  background-color: #c87b84;
+  color: #fff;
+  padding: 4px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  width: fit-content;
+  margin-bottom: 8px;
+  align-self: flex-start; /* Default for LTR */
+}
+
+/* In RTL, align badge to the left */
+[dir="rtl"] .page-carts .installment-badge {
+  align-self: flex-end;
+}
+
 .page-carts .sum {
+  width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;

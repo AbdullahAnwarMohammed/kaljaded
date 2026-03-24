@@ -4,9 +4,10 @@ use App\Http\Controllers\Api\User\BannerController;
 use Illuminate\Support\Facades\Route;
 
 
+
 Route::get("/banners/migrate-data", [BannerController::class, 'migrateData']);
 
-// 
+
 
 Route::get('/migrate-user-addresses', function () {
     \Illuminate\Support\Facades\Artisan::call('users:migrate-addresses');

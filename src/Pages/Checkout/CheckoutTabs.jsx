@@ -30,6 +30,7 @@ const CheckoutTabs = () => {
     const [loading, setLoading] = useState(true);
     const [cartTotal, setCartTotal] = useState(0);
     const [paymentMethods, setPaymentMethods] = useState([]);
+    const [selectedMethod, setSelectedMethod] = useState(null); // 'deema', 'cod' or ID
 
     useEffect(() => {
         Api.get('/profile')
@@ -96,6 +97,11 @@ const CheckoutTabs = () => {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
+        if (name === "phone") {
+            if (!value.startsWith("965")) {
+                return;
+            }
+        }
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
@@ -130,6 +136,34 @@ const CheckoutTabs = () => {
             payment_method: paymentMethod,
             gateway_id: gatewayId
         };
+
+        if (paymentMethod === 'deema') {
+            const deemaPayload = {
+                customer_name: formData.name,
+                customer_phone: formData.phone,
+                latitude: formData.latitude,
+                longitude: formData.longitude,
+                useraddress: `${formData.cityName || ''} ${formData.areaName || ''} قطعة:${formData.block} شارع:${formData.street} قسيمة/بناية:${formData.building}`,
+            };
+
+            Api.post('/payment/deema/checkout', deemaPayload)
+                .then(res => {
+                    if (res.data?.data?.redirect_link) {
+                        window.location.href = res.data.data.redirect_link;
+                    } else if (res.data?.redirect_link) {
+                         window.location.href = res.data.redirect_link;
+                    } else {
+                        console.error("No redirect link found", res.data);
+                        alert(t("error_occurred") || "Error occurred during Deema checkout");
+                    }
+                })
+                .catch(err => {
+                    console.error("Deema checkout failed", err);
+                    alert(t("error_occurred") || "Error occurred during Deema checkout");
+                })
+                .finally(() => setLoading(false));
+            return;
+        }
 
         Api.post('/payment/myfatoorah/checkout', payload)
             .then(res => {
@@ -234,6 +268,7 @@ const CheckoutTabs = () => {
                         handleChange={handleInputChange}
                         onNext={handleNextStep}
                         onLocationUpdate={handleLocationUpdate}
+                        paymentMethod={selectedMethod}
                     />
                 )}
 
@@ -244,6 +279,8 @@ const CheckoutTabs = () => {
                         paymentMethods={paymentMethods}
                         onBack={handleBackStep}
                         onSubmit={handleSubmit}
+                        selectedMethodId={selectedMethod}
+                        setSelectedMethodId={setSelectedMethod}
                     />
                 )}
             </div>

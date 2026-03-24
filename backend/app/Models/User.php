@@ -33,10 +33,23 @@ class User extends Authenticatable
         'floor',
         'apartment',
         'latitude',
-        'latitude',
         'longitude',
+        'slug',
+        'name_vendor',
+        'request_vendor',
+        'address',
+        'phone_vendor',
+        'image',
+        'image_vendor',
+        'commercial_Register_No',
+        'image_commercial_Register_No',
+        'token',
+        'token_firebase',
+        'role',
+        'price',
         'otp_code',
-        'otp_expires_at'
+        'otp_expires_at',
+        'google_id'
     ];
 
     protected $casts = [
@@ -53,11 +66,13 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
+    public function fcmTokens()
+    {
+        return $this->hasMany(UserFcmToken::class);
+    }
+
+
+
     public function city()
     {
         return $this->belongsTo(City::class);
@@ -86,5 +101,10 @@ class User extends Authenticatable
     public function writtenReviews()
     {
         return $this->hasMany(Review::class, 'user_id');
+    }
+
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
     }
 }

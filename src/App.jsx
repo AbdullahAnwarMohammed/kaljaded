@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import MainLayout from "./MainLayout";
 import EmptyLayout from "./EmptyLayout";
 import GuestRoute from "./routes/GuestRoute";
+import ProtectedRoute from "./routes/ProtectedRoute";
 import PaymentSuccess from "./Pages/PaymentSuccess";
 import PaymentFailure from "./Pages/PaymentFailure";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -14,6 +15,9 @@ import "./Pages/ProductByCategory.css";
 import { LoadingProvider } from "./context/LoadingContext";
 import Spinner from "./components/Spinner";
 import { CartProvider } from "./context/CartContext";
+import { useEffect } from "react";
+import { onMessageListener } from "./firebase-config";
+import { showNotificationPermissionPopup } from "./utils/notificationHelper";
 
 import { lazyWithRetry } from "./utils/lazyWithRetry";
 
@@ -41,13 +45,36 @@ const RequestProduct = lazyWithRetry(() => import("./Pages/RequestProduct"));
 const AddDevice = lazy(() => import("./Pages/AddDevice"));
 const ProductCustomerDetails = lazy(() => import("./Pages/ProductCustomerDetails"));
 const SiteStats = lazy(() => import("./components/SiteStats/SiteStats"));
+const CompleteProfile = lazy(() => import("./Pages/CompleteProfile"));
+const Profile = lazy(() => import("./Pages/Profile"));
+const Notifications = lazy(() => import("./Pages/Notifications"));
+const AuthCallback = lazy(() => import("./Pages/AuthCallback"));
+const NotFound = lazy(() => import("./Pages/NotFound"));
+
+import EnrollmentCheck from "./components/EnrollmentCheck";
 
 function App() {
+  useEffect(() => {
+    // Check if user is logged in before requesting token
+    const token = localStorage.getItem("customer_token");
+    if (token) {
+      showNotificationPermissionPopup();
+    }
+
+    onMessageListener()
+      .then((payload) => {
+        console.log("Foreground message received:", payload);
+        // You can use a custom alert or toast here
+      })
+      .catch((err) => console.log("failed: ", err));
+  }, []);
+
   return (
     <LoadingProvider>
       <Spinner />
       <CartProvider>
         <Router basename={window.location.pathname.startsWith("/dist") ? "/dist/" : "/"}>
+              <EnrollmentCheck />
               <Suspense fallback={<Spinner />}>
             <Routes>
               <Route
@@ -161,7 +188,41 @@ function App() {
                 }
               />
 
+              <Route
+                path="/complete-profile"
+                element={
+                    <EmptyLayout>
+                      <CompleteProfile />
+                    </EmptyLayout>
+                }
+              />
 
+              <Route
+                path="/auth/callback"
+                element={
+                    <EmptyLayout>
+                      <AuthCallback />
+                    </EmptyLayout>
+                }
+              />
+
+              <Route
+                path="/profile"
+                element={
+                    <EmptyLayout>
+                      <Profile />
+                    </EmptyLayout>
+                }
+              />
+
+              <Route
+              path="/notifications"
+              element={
+                  <EmptyLayout>
+                    <Notifications />
+                  </EmptyLayout>
+              }
+            />
 
               <Route
                 path="/register-vendor"
@@ -204,9 +265,11 @@ function App() {
               <Route
                 path="/request-product"
                 element={
-                  <MainLayout>
-                    <RequestProduct />
-                  </MainLayout>
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <RequestProduct />
+                    </MainLayout>
+                  </ProtectedRoute>
                 }
               />
               
@@ -224,9 +287,11 @@ function App() {
               <Route
                 path="/product-customer/:id"
                 element={
-                  <EmptyLayout>
-                     <ProductCustomerDetails />
-                  </EmptyLayout>
+                  <ProtectedRoute>
+                    <EmptyLayout>
+                       <ProductCustomerDetails />
+                    </EmptyLayout>
+                  </ProtectedRoute>
                 }
               />
 
@@ -251,7 +316,7 @@ function App() {
 
 
               {/* Fallback route */}
-              <Route path="*" element={<MainLayout><Home /></MainLayout>} />
+              <Route path="*" element={<EmptyLayout><NotFound /></EmptyLayout>} />
 
             </Routes>
           </Suspense>

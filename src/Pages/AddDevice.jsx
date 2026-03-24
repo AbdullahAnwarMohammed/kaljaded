@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { FaChevronLeft, FaArrowRight } from 'react-icons/fa'; // Assuming RTL, arrow might need flip
 import { BsCheckCircleFill } from 'react-icons/bs'; 
 import Api from '../Services/Api';
+import Swal from 'sweetalert2';
 import './AddDevice.css';
 
 const AddDevice = () => {
@@ -15,7 +17,8 @@ const AddDevice = () => {
     const [isChecked, setIsChecked] = useState(false);
     
     // Navigation State
-    const [view, setView] = useState('main'); // 'main', 'category', 'brand', 'type'
+    const [view, setView] = useState('main'); // 'main', 'category', 'brand', 'type', 'preview'
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [categories, setCategories] = useState([]);
     const [loadingCategories, setLoadingCategories] = useState(false);
     
@@ -29,6 +32,8 @@ const AddDevice = () => {
     const [deviceNotes, setDeviceNotes] = useState('');
     const [gifts, setGifts] = useState('');
     const [serialNumber, setSerialNumber] = useState('');
+    const [showScanner, setShowScanner] = useState(false);
+    const scannerRef = useRef(null);
 
     // Device Test State
     const [deviceTests, setDeviceTests] = useState({
@@ -61,6 +66,57 @@ const AddDevice = () => {
     const [selectedImages, setSelectedImages] = useState([]); // Array of { id, file, url }
     // Device Data usually just inputs, maybe check if filled? For now let's assume it depends on images.
 
+    useEffect(() => {
+        if (showScanner) {
+            const scanner = new Html5QrcodeScanner(
+                'reader', 
+                { 
+                    fps: 10, 
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0,
+                    showTorchButtonIfSupported: true,
+                    showZoomSliderIfSupported: true,
+                },
+                /* verbose= */ false
+            );
+
+            scanner.render((decodedText) => {
+                setSerialNumber(decodedText);
+                setShowScanner(false);
+                scanner.clear();
+            }, (error) => {
+                // Ignore scanner errors
+            });
+
+            // Manual translation for library buttons
+            const translateButtons = () => {
+                const interval = setInterval(() => {
+                    const permissionBtn = document.getElementById('html5-qrcode-button-camera-permission');
+                    const fileSelectionBtn = document.getElementById('html5-qrcode-button-file-selection');
+                    const stopBtn = document.getElementById('html5-qrcode-button-camera-stop');
+                    const startBtn = document.getElementById('html5-qrcode-button-camera-start');
+
+                    if (permissionBtn) permissionBtn.innerText = t('request_camera_permission') || 'السماح بالكاميرا';
+                    if (fileSelectionBtn) fileSelectionBtn.innerText = t('scan_image_file') || 'مسح من صورة';
+                    if (stopBtn) stopBtn.innerText = t('stop_scanning') || 'إيقاف المسح';
+                    if (startBtn) startBtn.innerText = t('start_scanning') || 'بدء المسح';
+
+                    if (permissionBtn || fileSelectionBtn) {
+                        // Keep Running for a few more seconds to catch UI state changes
+                    }
+                }, 300);
+
+                setTimeout(() => clearInterval(interval), 10000); // Stop looking after 10s
+            };
+
+            translateButtons();
+
+            return () => {
+                scanner.clear().catch(error => console.error("Failed to clear scanner", error));
+            };
+        }
+    }, [showScanner]);
+
     const handleBack = () => {
         if (view === 'category' || view === 'brand') {
             setView('main');
@@ -86,6 +142,8 @@ const AddDevice = () => {
         } else if (view === 'test_detail') {
             setView('device_test');
             setActiveTestItem(null);
+        } else if (view === 'preview') {
+            setView('main');
         } else {
             navigate(-1);
         }
@@ -167,7 +225,27 @@ const AddDevice = () => {
         }
     };
 
-    const handleSubmit = async () => {
+    const handleSubmit = () => {
+        setView('preview');
+        window.scrollTo(0, 0);
+    };
+
+    const finalSubmit = async () => {
+        const result = await Swal.fire({
+            title: 'تأكيد الإضافة',
+            text: 'هل أنت متأكد من إضافة الجهاز للبيع كمزاد؟',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#0e0f3a',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'نعم، أضف كـ مزاد',
+            cancelButtonText: 'تراجع',
+            reverseButtons: true
+        });
+
+        if (!result.isConfirmed) return;
+
+        setIsSubmitting(true);
         const formData = new FormData();
         
         // Try to get user data from localStorage
@@ -232,12 +310,23 @@ const AddDevice = () => {
         try {
             const res = await Api.post('/products-customer', formData);
             if (res.data.success) {
-                // Success - navigate to home or success page
-                navigate('/');
+                Swal.fire({
+                    icon: 'success',
+                    title: t('success_submit') || 'تم إضافة الجهاز بنجاح',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                navigate('/request-product');
             }
         } catch (error) {
             console.error("Error submitting product:", error);
-            alert(t('error_submit') || 'حدث خطأ أثناء الإرسال');
+            Swal.fire({
+                icon: 'error',
+                title: t('error_submit') || 'حدث خطأ أثناء الإرسال',
+                text: error.response?.data?.message
+            });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -759,34 +848,111 @@ const AddDevice = () => {
 
 
             <div className="serial-input-container">
-                <div className="barcode-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="3" width="7" height="7"></rect>
-                        <rect x="14" y="3" width="7" height="7"></rect>
-                        <rect x="14" y="14" width="7" height="7"></rect>
-                        <rect x="3" y="14" width="7" height="7"></rect>
-                    </svg>
-                </div>
-                <input 
-                    type="text"
-                    className="serial-input"
-                    placeholder={t('device_serial') || 'سيريال الجهاز'}
-                    value={serialNumber}
-                    onChange={(e) => setSerialNumber(e.target.value)}
-                />
+            <div 
+                className={`barcode-icon ${showScanner ? 'active' : ''}`}
+                onClick={() => setShowScanner(!showScanner)}
+                style={{ cursor: 'pointer' }}
+            >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
             </div>
+            <input 
+                type="text"
+                className="serial-input"
+                placeholder={t('device_serial') || 'سيريال الجهاز'}
+                value={serialNumber}
+                onChange={(e) => setSerialNumber(e.target.value)}
+            />
+        </div>
+
+        {showScanner && (
+            <div className="scanner-container-wrapper">
+                <div className="scanner-header">
+                    <span>{t('scan_serial') || 'مسح السيريال'}</span>
+                    <button onClick={() => setShowScanner(false)}>×</button>
+                </div>
+                <div id="reader" style={{ width: '100%' }}></div>
+                <p className="scanner-hint">{t('scan_hint') || 'وجه الكاميرا نحو السيريال أو اختر صورة'}</p>
+            </div>
+        )}
 
             <button 
                 className={`btn-confirm-data ${deviceNotes.trim() ? 'active' : 'disabled'}`}
                 disabled={!deviceNotes.trim()}
-                onClick={handleSubmit}
+                onClick={() => setView('main')}
             >
-                {t('submit_data') || 'إرسال البيانات'}
+                {t('confirm') || 'تأكيد'}
             </button>
         </div>
     );
 
 
+
+    const renderPreviewView = () => {
+        const productName = `${selectedBrand?.name || ''} ${selectedType?.name || ''}`.trim() || t('product');
+        
+        return (
+            <div className="device-preview-view">
+                <div className="preview-image-section">
+                    <img 
+                        src={selectedImages[0]?.url || '/placeholder-device.png'} 
+                        alt="Product Preview" 
+                        className="main-preview-image"
+                    />
+                    <div className="preview-badge-new">{condition === 'new' ? 'جديد' : 'مستعمل'}</div>
+                   
+                </div>
+
+                <div className="preview-details-container">
+                    <h2 className="preview-product-name">{productName}</h2>
+                    
+                    <div className="preview-specs-chips">
+                        <div className="spec-chip">
+                            <span>{selectedColor?.name || 'غير محدد'}</span>
+                        </div>
+                        {selectedMemory && (
+                            <div className="spec-chip">
+                                <span>{selectedMemory}</span>
+                            </div>
+                        )}
+                        <div className="spec-chip">
+                            <span>{condition === 'new' ? t('new') : 'مع كرتون'}</span>
+                        </div>
+                    </div>
+
+                    <div className="preview-inspector-notes">
+                        <h4 className="notes-header-title">{t('inspector_notes') || 'تعليق الفاحص'}</h4>
+                        <div className="notes-content-box">
+                            <p>{deviceNotes || t('no_notes')}</p>
+                        </div>
+                    </div>
+
+                    {gifts && (
+                        <div className="preview-inspector-notes" style={{marginTop: '15px'}}>
+                            <h4 className="notes-header-title">{t('gifts') || 'الهدايا وملحقات إضافية'}</h4>
+                            <div className="notes-content-box" >
+                                <p>{gifts}</p>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="preview-action-footer">
+                        <button 
+                            className="btn-final-confirm" 
+                            onClick={finalSubmit}
+                            disabled={isSubmitting}
+                        >
+                            {isSubmitting ? (t('submitting') || 'جاري الإضافة...') : (t('confirm_add_device') || 'إضافة الجهاز')}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    };
 
     const renderDeviceTestView = () => (
         <div className="device-test-view">
@@ -1029,6 +1195,7 @@ const AddDevice = () => {
                      view === 'images' ? (t('images') || 'الصور') :
                      view === 'device_test' ? (t('device_test') || 'اختبار الجهاز') :
                      view === 'device_data' ? (t('device_data') || 'بيانات الجهاز') :
+                     view === 'preview' ? (t('preview') || 'معاينة الجهاز') :
                      (t('add_device') || 'اضافة جهاز')}
                 </h3>
                 <div style={{ width: 24 }}></div> {/* Spacer for centering */}
@@ -1087,7 +1254,7 @@ const AddDevice = () => {
                                 boxShadow: allStepsCompleted ? '0 4px 15px rgba(67, 82, 146, 0.4)' : 'none'
                              }}
                         >
-                            {t('add_device') || 'إضافة الجهاز'}
+                            {t('next') || 'التالي'}
                         </button>
                     </div>
                 </>
@@ -1105,6 +1272,8 @@ const AddDevice = () => {
                 renderDeviceTestView()
             ) : view === 'test_detail' ? (
                 renderTestDetailView()
+            ) : view === 'preview' ? (
+                renderPreviewView()
             ) : (
                 renderDeviceDataView()
             )}

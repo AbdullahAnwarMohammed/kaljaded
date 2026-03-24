@@ -13,7 +13,6 @@ import { MdOutlineIosShare } from "react-icons/md";
 import shipping from "../../src/assets/shipping.png";
 import return_image from "../../src/assets/return.png";
 import hourse from "../../src/assets/hourse.png";
-import deema_image from "../../src/assets/deema.png";
 
 import "swiper/css";
 import "swiper/css/navigation";
@@ -107,48 +106,7 @@ const ProductDetails = () => {
   };
 
 
-  const handleInstallClick = async () => {
-    const token = localStorage.getItem("customer_token");
-    let customer = {};
-    try {
-      const storedCustomer = localStorage.getItem("customer");
-      if (storedCustomer && storedCustomer !== "undefined") {
-        customer = JSON.parse(storedCustomer);
-      }
-    } catch (e) {
-      console.error("Error parsing customer from localStorage", e);
-    }
 
-    const isValidToken = token && token !== "undefined" && token !== "null";
-
-    if (!isValidToken) {
-      navigate("/login-customer");
-      return;
-    }
-
-    try {
-      const res = await Api.post(
-        "/payment/deema/checkout",
-        {
-          productid: product.id,
-          customer_name: customer.name || "Customer",
-          customer_phone: customer.phone || "00000000",
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      if (res.data) {
-        console.log(res.data);
-        window.location.href = res.data.data.redirect_link;
-      }
-    } catch (err) {
-      console.log(err);
-      alert(t("error_occurred")); // You might want to add this key too or leave alert
-    }
-  };
 
   const handleShare = async () => {
     if (!product) return;
@@ -259,7 +217,7 @@ const ProductDetails = () => {
               {product.ramsize > 0 && <div className="attribute">{product.ramsize} {t("ram")}</div>}
           {product.color && <div className="attribute">{product.color}</div>}
           {product.memorysize > 0 && <div className="attribute">{product.memorysize} {t("gb")}</div>}
-          <div className="attribute">{product.device_clean == 100 ? t("with_box") : t("without_box")}</div>
+          <div className="attribute">{product.device_box == 1 ? t("with_box") : t("without_box")}</div>
           </div>
           <Link to={`/merchants/${product.merchant_id}`} className="link-merchament">
             <RiStore2Line size={20} />
@@ -296,7 +254,7 @@ const ProductDetails = () => {
           </header>
 
           <div className="payment">
-            <div onClick={handleInstallClick} >{t("install_with_deema")} <img src={deema_image} width={40} alt="" /></div>
+
 
             {!cartItem ? (
               <button

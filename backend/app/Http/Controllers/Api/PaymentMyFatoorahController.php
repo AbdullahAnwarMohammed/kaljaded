@@ -9,6 +9,7 @@ use App\Models\CartItem;
 use App\Models\Product;
 use App\Models\FavoriteItem;
 use App\Services\MyFatoorahService;
+use App\Services\WaSenderApiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
@@ -18,10 +19,12 @@ use Illuminate\Validation\ValidationException;
 class PaymentMyFatoorahController extends Controller
 {
     protected MyFatoorahService $myFatoorah;
+    protected WaSenderApiService $waSender;
 
-    public function __construct(MyFatoorahService $myFatoorah)
+    public function __construct(MyFatoorahService $myFatoorah, WaSenderApiService $waSender)
     {
         $this->myFatoorah = $myFatoorah;
+        $this->waSender = $waSender;
     }
 
     // Initiate Checkout
@@ -87,7 +90,7 @@ class PaymentMyFatoorahController extends Controller
                         'userphone'                  => $request->phone ?? $user->phone ?? '',
                         'latitude'                   => $request->latitude ?? $user->latitude ?? 0,
                         'longitude'                  => $request->longitude ?? $user->longitude ?? 0,
-                        'useraddress'                => ("City: " . ($request->cityName ?? $user->city_id ?? '') . ", Area: " . ($request->areaName ?? $user->area_id ?? '')),
+                        'useraddress'                => ("المدينة: " . ($request->cityName ?? $user->city_id ?? '') . ", المنطقة: " . ($request->areaName ?? $user->area_id ?? '') . ", قطعة: " . ($request->block ?? $user->block ?? '') . ", شارع: " . ($request->street ?? $user->street ?? '') . ", قسيمة/بناية: " . ($request->building ?? $user->building ?? '')),
                         'totalprice'                 => ($item->price * $item->quantity) ?? 0,
                         'typepay'                    => 'delivery',
                         'order_source'               => 'Web',
@@ -153,6 +156,28 @@ class PaymentMyFatoorahController extends Controller
                 }
                 $cart->items()->delete();
                 DB::commit();
+
+                // Send WhatsApp Notification to Customer
+                $customerPhone = $request->phone ?? $user->phone ?? null;
+                if ($customerPhone) {
+                    $message = "شكراً لطلبك من *كالجديد*! 🔔\n\n";
+                    $message .= "تم استلام طلبك (الدفع عند الاستلام) بنجاح وجاري معالجته.\n\n";
+                    $message .= "📍 *تفاصيل الطلب:*\n";
+                    $message .= "• *مرجع الطلب:* {$merchantOrderId}\n";
+                    $message .= "• *العنوان:* " . ("City: " . ($request->cityName ?? $user->city_id ?? '') . ", Area: " . ($request->areaName ?? $user->area_id ?? '')) . "\n\n";
+                    $message .= "📦 *المنتجات:*\n";
+                    
+                    foreach ($cart->items as $item) {
+                        if ($item->product) {
+                            $message .= "- {$item->product->name} (Qty: {$item->quantity}) - " . ($item->price * $item->quantity) . " K.D\n";
+                        }
+                    }
+                    
+                    $message .= "\n💰 *الإجمالي:* {$amount} K.D\n\n";
+                    $message .= "شكراً لثقتك بنا! نتمنى لك يوماً سعيداً.";
+                    $this->waSender->sendTextMessage($customerPhone, $message);
+                }
+
                 return response()->json(['success' => true, 'url' => null]); 
              } catch (\Exception $e) {
                  DB::rollBack();
@@ -173,10 +198,11 @@ class PaymentMyFatoorahController extends Controller
             'customer_name'     => $request->name ?? $user->name,
             'customer_phone'    => $request->phone ?? $user->phone,
             'customer_email'    => $user->email ?? '',
-            'user_address_str'  => "City: " . ($request->cityName ?? $user->city_id) . 
-                                   ", Area: " . ($request->areaName ?? $user->area_id) .
-                                   ", Block: " . ($request->block ?? $user->block) .
-                                   ", Street: " . ($request->street ?? $user->street),
+            'user_address_str'  => "المدينة: " . ($request->cityName ?? $user->city_id) . 
+                                   ", المنطقة: " . ($request->areaName ?? $user->area_id) .
+                                   ", قطعة: " . ($request->block ?? $user->block) .
+                                   ", شارع: " . ($request->street ?? $user->street) .
+                                   ", قسيمة/بناية: " . ($request->building ?? $user->building),
             'latitude'          => $request->latitude ?? $user->latitude,
             'longitude'         => $request->longitude ?? $user->longitude,
             'items'             => [],
@@ -275,7 +301,7 @@ class PaymentMyFatoorahController extends Controller
             // Edge case: Cache expired, but payment paid. 
             // In a real prod environment, you might log this heavily or have a backup mechanism.
             // For now, fail safely.
-            \Log::error("MyFatoorah Cache Expired for Paid Order: $merchantOrderId");
+            Log::error("MyFatoorah Cache Expired for Paid Order: $merchantOrderId");
             return redirect()->away("$frontendUrl/payment-failed?error=order_expired");
         }
 
@@ -378,11 +404,34 @@ class PaymentMyFatoorahController extends Controller
 
             // Clear Cache
             \Illuminate\Support\Facades\Cache::forget('myfatoorah_order_' . $merchantOrderId);
+
+            // Send WhatsApp Notification to Customer
+            $customerPhone = $cacheData['customer_phone'] ?? null;
+            if ($customerPhone) {
+                $message = "شكراً لطلبك من *كالجديد*! 🔔\n\n";
+                $message .= "تم استلام طلبك (دفع أونلاين) بنجاح وجاري معالجته.\n\n";
+                $message .= "📍 *التفاصيل:*\n";
+                $message .= "• *مرجع الدفع:* {$paymentId}\n";
+                $message .= "• *العنوان:* " . ($cacheData['user_address_str'] ?? 'غير معروف') . "\n\n";
+                $message .= "📦 *المنتجات:*\n";
+                
+                foreach ($cacheData['items'] as $itemData) {
+                    $p = Product::find($itemData['product_id']);
+                    if ($p) {
+                        $message .= "- {$p->name} (Qty: {$itemData['quantity']}) - " . ($itemData['price'] * $itemData['quantity']) . " K.D\n";
+                    }
+                }
+                
+                $message .= "\n💰 *الإجمالي:* {$cacheData['amount']} K.D\n\n";
+                $message .= "شكراً لثقتك بنا! نتمنى لك يوماً سعيداً.";
+                $this->waSender->sendTextMessage($customerPhone, $message);
+            }
+
             return redirect()->away("$frontendUrl/payment-success?order_id=" . $createdFirstId);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error("MyFatoorah Order Creation Failed: " . $e->getMessage());
+            Log::error("MyFatoorah Order Creation Failed: " . $e->getMessage());
             return redirect()->away("$frontendUrl/payment-failed?error=creation_failed");
         }
     }
@@ -411,7 +460,7 @@ class PaymentMyFatoorahController extends Controller
                 }
             } catch (\Exception $e) {
                 // Ignore errors during failure cleanup
-                \Log::error("Failed to cleanup order in failure callback: " . $e->getMessage());
+                Log::error("Failed to cleanup order in failure callback: " . $e->getMessage());
             }
         }
 
@@ -454,7 +503,7 @@ class PaymentMyFatoorahController extends Controller
         // If still 0, maybe default to 10 just to get the methods (some gateways require > 0)
         if ($amount <= 0) $amount = 10; 
 
-        $currency = $request->input('currency', 'EGP');
+        $currency = $request->input('currency', 'KWD');
 
         $response = $this->myFatoorah->initiatePayment($amount, $currency);
 

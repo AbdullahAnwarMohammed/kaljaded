@@ -22,5 +22,8 @@ return [
     'send_otp' => 'تم ارسال الرمز بنجاح',
     'successfully_otp' => 'الرمز صحيح',
     'successfully_password' => 'تم تغير كلمة المرور بنجاح',
+    "invalid_otp" => "رمز التحقق غير صحيح",
+    'site_stats_retrieved' => 'تـم استـرجاع إحصائيات الموقـع بنجـاح',
+    'current_site_stats_retrieved' => 'تـم استـرجاع إحصائيات الموقـع الحاليـة بنجـاح',
 
 ];

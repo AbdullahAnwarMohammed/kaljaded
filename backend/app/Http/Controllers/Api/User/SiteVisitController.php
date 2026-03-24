@@ -65,6 +65,20 @@ class SiteVisitController extends Controller
         return $this->successResponse([
             'daily' => $dailyStats,
             'monthly' => $monthlyStats,
-        ], 'Site stats retrieved');
+        ], 'messages.site_stats_retrieved');
+    }
+
+    public function currentStats()
+    {
+        $today = Carbon::today();
+        $thisMonth = Carbon::now()->startOfMonth();
+
+        $todayVisits = SiteView::whereDate('created_at', $today)->count();
+        $thisMonthVisits = SiteView::where('created_at', '>=', $thisMonth)->count();
+
+        return $this->successResponse([
+            'today' => $todayVisits,
+            'this_month' => $thisMonthVisits,
+        ], 'messages.current_site_stats_retrieved');
     }
 }

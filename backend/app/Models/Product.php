@@ -109,6 +109,12 @@ class Product extends Model
     {
         return $this->belongsTo(SubSubCategory::class, 'sub_sub_category_id');
     }
+
+    public function merchant()
+    {
+        return $this->belongsTo(User::class, 'iduserinsert');
+    }
+
     public function views()
     {
         return $this->morphMany(ProductView::class, 'visitable');

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FiSearch, FiGift } from "react-icons/fi";
+import { FiSearch, FiGift, FiClock, FiChevronLeft, FiChevronRight, FiZap } from "react-icons/fi";
+import { FaGavel, FaWhatsapp } from "react-icons/fa";
 import { MdQrCodeScanner, MdVisibility } from "react-icons/md";
 import { useTranslation } from "react-i18next";
 import EmptyStateAnimation from "../components/EmptyStateAnimation/EmptyStateAnimation";
@@ -8,12 +9,46 @@ import "./RequestProduct.css";
 import popupImage from '../assets/popup.png';
 import Api from "../Services/Api";
 
+const CountdownTimer = ({ expiryDate }) => {
+    const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            const difference = +new Date(expiryDate) - +new Date();
+            if (difference > 0) {
+                setTimeLeft({
+                    hours: Math.floor(difference / (1000 * 60 * 60)),
+                    minutes: Math.floor((difference / 1000 / 60) % 60),
+                    seconds: Math.floor((difference / 1000) % 60)
+                });
+            } else {
+                setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
+                clearInterval(timer);
+            }
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [expiryDate]);
+
+    return (
+        <div className="auction-timer">
+            <FiClock size={12} />
+            <span>
+                {timeLeft.hours.toString().padStart(2, '0')}:
+                {timeLeft.minutes.toString().padStart(2, '0')}:
+                {timeLeft.seconds.toString().padStart(2, '0')}
+            </span>
+        </div>
+    );
+};
+
 const RequestProduct = () => {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const isRTL = i18n.language === "ar";
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [activeCount, setActiveCount] = useState(0);
 
     const [showSearch, setShowSearch] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -21,6 +56,9 @@ const RequestProduct = () => {
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const [isFetching, setIsFetching] = useState(false); // To prevent multiple fetch calls
+
+    const [showSelection, setShowSelection] = useState(false);
+    const [selectedType, setSelectedType] = useState('auction');
 
     useEffect(() => {
         const delayDebounceFn = setTimeout(() => {
@@ -56,6 +94,20 @@ const RequestProduct = () => {
     }, [hasMore, loading, isFetching]);
 
 
+    const handleToggleAuction = async (e, product) => {
+        e.stopPropagation();
+        try {
+            const response = await Api.post(`/products-customer/${product.id}/toggle-auction`);
+            if (response.data.success) {
+                setProducts(prev => prev.map(p => 
+                    p.id === product.id ? { ...p, auction_status: !p.auction_status } : p
+                ));
+            }
+        } catch (error) {
+            console.error("Error toggling auction status:", error);
+        }
+    };
+
     const fetchProducts = async (query = '', pageNum = 1) => {
         if (pageNum === 1) {
             setLoading(true);
@@ -77,6 +129,10 @@ const RequestProduct = () => {
                     setProducts((prev) => [...prev, ...newData]);
                 }
                 
+                if (response.data.data.active_count !== undefined) {
+                    setActiveCount(response.data.data.active_count);
+                }
+
                 // Check if we have more pages
                 if (meta && meta.current_page < meta.last_page) {
                     setHasMore(true);
@@ -89,6 +145,18 @@ const RequestProduct = () => {
         } finally {
             setLoading(false);
             setIsFetching(false);
+            
+            // Check if we need to load more because the screen isn't full
+            setTimeout(() => {
+                if (
+                    document.documentElement.scrollHeight <= window.innerHeight + 100 && 
+                    hasMore && 
+                    !loading && 
+                    !isFetching
+                ) {
+                    setPage(prev => prev + 1);
+                }
+            }, 500);
         }
     };
 
@@ -104,6 +172,19 @@ const RequestProduct = () => {
 
     const closePopup = () => {
         setShowPopup(false);
+    };
+
+    const startFlow = () => {
+        setShowPopup(false);
+        setShowSelection(true);
+    };
+
+    const handleNext = () => {
+        if (selectedType === 'auction') {
+            navigate('/add-device');
+        } else {
+            handleWhatsapp();
+        }
     };
 
     return (
@@ -133,11 +214,29 @@ const RequestProduct = () => {
                         <p className="home-popup-text">
                             سيتم عرض جهازك على التجار في منطقتك <br /> ليتنافسوا في تقديم أفضل سعر لك
                         </p>
+                        <div className="popup-selection-container">
+                            <div 
+                                className={`popup-option-card ${selectedType === 'auction' ? 'selected' : ''}`}
+                                onClick={() => setSelectedType('auction')}
+                            >
+                                <FaGavel size={20} className="option-card-icon" />
+                                <span>ابدأ المزايدة</span>
+                            </div>
+                            <div 
+                                className={`popup-option-card ${selectedType === 'selling' ? 'selected' : ''}`}
+                                onClick={() => setSelectedType('selling')}
+                            >
+                                <FaWhatsapp size={20} className="option-card-icon" />
+                                <span>بيعه سريعة</span>
+                            </div>
+                        </div>
+
                         <button 
-                            className="home-popup-action-btn"
-                            onClick={closePopup}
+                            className="home-popup-action-btn next-variant"
+                            onClick={handleNext}
                         >
-                            ابدأ المزايدة الآن
+                            <span className="next-btn-text">التالي</span>
+                            {/* {isRTL ? <FiChevronLeft size={20} className="next-btn-icon" /> : <FiChevronRight size={20} className="next-btn-icon" />} */}
                         </button>
                     </div>
                 </div>
@@ -158,7 +257,10 @@ const RequestProduct = () => {
                         autoFocus
                     />
                 ) : (
-                    <h5>{t("products") || "المنتجات"}</h5>
+                    <h5 className="auctions-title">
+                        {t("auctions") || "المزايدة"}
+                        {activeCount > 0 && <span className="active-count-badge">{activeCount}</span>}
+                    </h5>
                 )}
                 
                  <div className="header-icon-container">
@@ -187,83 +289,51 @@ const RequestProduct = () => {
                     </div>
                 ) : products.length > 0 ? (
                     <>
-                        <div className="products-grid">
+                        <div className="products-list">
                             {products.map((product) => (
                                 <div 
                                     key={product.id} 
-                                    className={`product-card product-card-details ${product.is_sold ? 'product-sold-style' : ''}`}
+                                    className="product-card-horizontal"
                                     onClick={() => navigate(`/product-customer/${product.id}`)}
                                     style={{cursor: 'pointer'}}
                                 >
-                                    <div className="product-image-wrapper">
-                                        {product.images ? (
-                                            <img 
-                                                src={`http://127.0.0.1:8000/${product.images.split(',')[0]}`} 
-                                                alt={product.name} 
-                                                className="product-image"
-                                            />
-                                        ) : (
-                                            <div className="no-image-placeholder">
-                                                <MdQrCodeScanner size={32} />
+                                     {/* Left Side: Auction Actions */}
+                                     <div className="card-auction-actions">
+                                         <div className="card-auction-header">
+                                            <div className={`auction-badge ${product.auction_status ? 'open' : 'closed'}`}>
+                                                {product.auction_status ? t("open_for_auction") || "مفتوح للمزاد" : t("closed_for_auction") || "المزاد متوقف"}
                                             </div>
-                                        )}
-                                        <div className="product-badges-wrapper">
-                                            <div className={`product-status-badge ${product.product_active_new === 1 ? 'new' : 'used'}`}>
-                                                {product.product_active_new === 1 ? (t('new') || 'جديد') : (t('used') || 'مستعمل')}
-                                            </div>
-                                            <div className="product-time-badge">
-                                                {product.time_ago}
-                                            </div>
-                                        </div>
-                                        
-                                        {product.gift && (
-                                            <div className="product-gift-badge">
-                                                <FiGift size={12} />
-                                            </div>
-                                        )}
 
-                                        <div className="product-views-wrapper">
-                                            <div className="product-views-badge">
-                                                <MdVisibility size={14} />
-                                                <span>{product.view || 0}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="product-details">
-                                        <div className="product-row header-row">
-                                            <h6 className="product-name">{product.name}</h6>
-                                            {product.category && (
-                                                <div className="product-category-badge">
-                                                    {product.category.name}
-                                                </div>
+                                            {product.expires_at && (
+                                                <CountdownTimer expiryDate={product.expires_at} />
                                             )}
-                                        </div>
-                                        <div className="product-row footer-row">
-                                            <div className="product-offers-count">
-                                                <span className="offers-value">{product.offers_count || 0}</span>
-                                                <span className="offers-label"> {t('offers') || 'عروض'} </span>
-                                            </div>
-                                            <p className="product-date">
-                                                {new Date(product.created_at).toLocaleDateString('en-GB')}
-                                            </p>
-                                        </div>
+                                         </div>
 
-                                        {/* Battery Condition Bar */}
-                                        {product.product_active_new === 0 && product.details && (
-                                             <div className="product-condition-bar-container">
-                                                <div 
-                                                    className="product-condition-bar-fill" 
-                                                    style={{ width: `${product.details.device_battery || 100}%` }}
-                                                ></div>
-                                                <span className="condition-percentage">
-                                                    {product.details.device_battery ? `${product.details.device_battery}%` : ''}
-                                                </span>
-                                                <span className="condition-text">
-                                                    {product.details.device_condition || (t('used') || 'مستعمل')}
-                                                </span>
+                                         <h6 className="horizontal-title">{product.name}</h6>
+
+                                         <button 
+                                             className={`btn-auction-toggle ${product.auction_status ? 'stop' : 'start'}`}
+                                             onClick={(e) => handleToggleAuction(e, product)}
+                                         >
+                                             {product.auction_status ? t("stop_auction") || "ايقاف المزاد" : t("start_auction") || "فتح المزاد"}
+                                         </button>
+                                     </div>
+
+                                     {/* Right Side: Image */}
+                                     <div className="horizontal-image-wrapper">
+                                         {product.images ? (
+                                             <img 
+                                                 src={`http://127.0.0.1:8000/${product.images.split(',')[0]}`} 
+                                                 alt={product.name} 
+                                                 className="horizontal-product-image"
+                                             />
+                                         ) : (
+                                             <div className="no-image-placeholder" style={{height: '100%', background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                                                  <MdQrCodeScanner size={24} color="#ccc" />
                                              </div>
-                                        )}
-                                    </div>
+                                         )}
+                                     </div>
+
                                 </div>
                             ))}
                         </div>

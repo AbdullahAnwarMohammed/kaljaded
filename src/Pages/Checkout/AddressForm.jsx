@@ -4,7 +4,7 @@ import { getCities, getAreas } from '../../api/locationApi';
 import LocationPicker from './LocationPicker';
 import { useTranslation } from 'react-i18next';
 
-const AddressForm = ({ formData, handleChange, onNext, onLocationUpdate }) => {
+const AddressForm = ({ formData, handleChange, onNext, onLocationUpdate, paymentMethod }) => {
     const { t, i18n } = useTranslation();
     const [cities, setCities] = useState([]);
     const [areas, setAreas] = useState([]);
@@ -107,109 +107,133 @@ const AddressForm = ({ formData, handleChange, onNext, onLocationUpdate }) => {
                     </select>
                 </div>
 
-                <div className="form-group">
-                    <select 
-                        name="area" 
-                        value={formData.area} 
-                        onChange={handleAreaChange} 
-                        className="form-control-custom"
-                        disabled={!formData.city}
-                    >
-                        <option value="">{t('area')}</option>
-                        {areas.map(area => (
-                            <option key={area.id} value={area.id}>
-                                {i18n.language === 'en' ? area.name_en : area.name_ar}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                <div className="form-group">
-                    <div className="input-with-icon">
-                        <FaChartPie className="input-icon" />
-                        <input
-                            type="text"
-                            name="block"
-                            value={formData.block}
-                            onChange={handleChange}
-                            placeholder={t('block_placeholder')}
-                            className="form-control-custom"
-                        />
-                    </div>
-                </div>
-
-                <div className="form-group">
-                    <div className="input-with-icon">
-                        <FaRoad className="input-icon" />
-                        <input
-                            type="text"
-                            name="street"
-                            value={formData.street}
-                            onChange={handleChange}
-                            placeholder={t('street_placeholder')}
-                            className="form-control-custom"
-                        />
-                    </div>
-                </div>
-
-                <div className="form-group">
-                    <div className="input-with-icon">
-                        <FaBuilding className="input-icon" />
-                        <input
-                            type="text"
-                            name="building"
-                            value={formData.building}
-                            onChange={handleChange}
-                            placeholder={t('building_placeholder')}
-                            className="form-control-custom"
-                        />
-                    </div>
-                </div>
-
-                <div className="row" style={{ display: 'flex', gap: '10px' }}>
-                    <div className="form-group col-6" style={{ flex: 1 }}>
-                        <div className="input-with-icon">
-                            <FaLayerGroup className="input-icon" />
-                            <input
-                                type="text"
-                                name="floor"
-                                value={formData.floor}
-                                onChange={handleChange}
-                                placeholder={t('floor_placeholder')}
+                {paymentMethod === 'cod' && (
+                    <>
+                        <div className="form-group">
+                            <select 
+                                name="area" 
+                                value={formData.area} 
+                                onChange={handleAreaChange} 
                                 className="form-control-custom"
-                            />
+                                disabled={!formData.city}
+                            >
+                                <option value="">{t('area')}</option>
+                                {areas.map(area => (
+                                    <option key={area.id} value={area.id}>
+                                        {i18n.language === 'en' ? area.name_en : area.name_ar}
+                                    </option>
+                                ))}
+                            </select>
+                            <div style={{ textAlign: 'right', marginTop: '4px' }}>
+                                <span className="optional-badge-text">{t('optional_label')}</span>
+                            </div>
                         </div>
-                    </div>
-                    <div className="form-group col-6" style={{ flex: 1 }}>
-                        <div className="input-with-icon">
-                            <FaHome className="input-icon" />
-                            <input
-                                type="text"
-                                name="apartment"
-                                value={formData.apartment}
-                                onChange={handleChange}
-                                placeholder={t('apartment_placeholder')}
-                                className="form-control-custom"
-                            />
-                        </div>
-                    </div>
-                </div>
 
-                <div className="form-group text-center ">
-                    <button 
-                        className="btn btn-link text-dark" 
-                        style={{ textDecoration: 'none' }}
-                        onClick={() => setShowMap(true)}
-                    >
-                        <FaMapMarkerAlt size={20} className="mx-2" />
-                        {t('locate_me')}
-                    </button>
-                    {formData.latitude && formData.longitude && (
-                        <div className="text-success small mt-1">
-                            {t('location_selected')}
+                        <div className="form-group">
+                            <div className="input-with-icon">
+                                <FaChartPie className="input-icon" />
+                                <input
+                                    type="text"
+                                    name="block"
+                                    value={formData.block}
+                                    onChange={handleChange}
+                                    placeholder={t('block_placeholder')}
+                                    className="form-control-custom"
+                                />
+                            </div>
+                            <div style={{ textAlign: 'right', marginTop: '4px' }}>
+                                <span className="optional-badge-text">{t('optional_label')}</span>
+                            </div>
                         </div>
-                    )}
-                </div>
+
+                        <div className="form-group">
+                            <div className="input-with-icon">
+                                <FaRoad className="input-icon" />
+                                <input
+                                    type="text"
+                                    name="street"
+                                    value={formData.street}
+                                    onChange={handleChange}
+                                    placeholder={t('street_placeholder')}
+                                    className="form-control-custom"
+                                />
+                            </div>
+                            <div style={{ textAlign: 'right', marginTop: '4px' }}>
+                                <span className="optional-badge-text">{t('optional_label')}</span>
+                            </div>
+                        </div>
+
+                        <div className="form-group">
+                            <div className="input-with-icon">
+                                <FaBuilding className="input-icon" />
+                                <input
+                                    type="text"
+                                    name="building"
+                                    value={formData.building}
+                                    onChange={handleChange}
+                                    placeholder={t('building_placeholder')}
+                                    className="form-control-custom"
+                                />
+                            </div>
+                            <div style={{ textAlign: 'right', marginTop: '4px' }}>
+                                <span className="optional-badge-text">{t('optional_label')}</span>
+                            </div>
+                        </div>
+
+                        <div className="row" style={{ display: 'flex', gap: '10px' }}>
+                            <div className="form-group col-6" style={{ flex: 1 }}>
+                                <div className="input-with-icon">
+                                    <FaLayerGroup className="input-icon" />
+                                    <input
+                                        type="text"
+                                        name="floor"
+                                        value={formData.floor}
+                                        onChange={handleChange}
+                                        placeholder={t('floor_placeholder')}
+                                        className="form-control-custom"
+                                    />
+                                </div>
+                                <div style={{ textAlign: 'right', marginTop: '4px' }}>
+                                    <span className="optional-badge-text">{t('optional_label')}</span>
+                                </div>
+                            </div>
+                            <div className="form-group col-6" style={{ flex: 1 }}>
+                                <div className="input-with-icon">
+                                    <FaHome className="input-icon" />
+                                    <input
+                                        type="text"
+                                        name="apartment"
+                                        value={formData.apartment}
+                                        onChange={handleChange}
+                                        placeholder={t('apartment_placeholder')}
+                                        className="form-control-custom"
+                                    />
+                                </div>
+                                <div style={{ textAlign: 'right', marginTop: '4px' }}>
+                                    <span className="optional-badge-text">{t('optional_label')}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </>
+                )}
+
+                {paymentMethod === 'cod' && (
+                    <div className="form-group text-center ">
+                        <button 
+                            className="btn btn-link text-dark" 
+                            style={{ textDecoration: 'none' }}
+                            onClick={() => setShowMap(true)}
+                        >
+                            <FaMapMarkerAlt size={20} className="mx-2" />
+                            {t('locate_me')}
+                        </button>
+                        {formData.latitude && formData.longitude && (
+                            <div className="text-success small mt-1">
+                                {t('location_selected')}
+                            </div>
+                        )}
+                    </div>
+                )}
 
                    <button className="btn-next" onClick={onNext}>
                 {t('next')}

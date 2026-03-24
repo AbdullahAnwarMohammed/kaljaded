@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\User;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\User\Product\ProductCustomerResource;
 use App\Models\ProductCustomer;
+use App\Models\User;
+use App\Services\FirebaseService; // Import the service
 use App\Traits\ApiResponseTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,9 +17,20 @@ class ProductCustomerController extends Controller
 {
     use ApiResponseTrait;
 
+    protected $firebaseService;
+
+    public function __construct(FirebaseService $firebaseService)
+    {
+        $this->firebaseService = $firebaseService;
+    }
+
     public function index(Request $request)
     {
-        $query = ProductCustomer::where('user_id', Auth::id())
+        $user = Auth::user();
+        $query = ProductCustomer::where('user_id', $user->id)
+            // ->where('auction_status', 1)
+            // ->where('is_sold', 0)
+            ->where('created_at', '>=', now()->subDay())
             ->with(['category', 'details'])
             ->withCount('offers')
             ->latest();
@@ -30,10 +43,19 @@ class ProductCustomerController extends Controller
             });
         }
 
-        $products = $query->paginate(4);
+        // Global count of all active auctions in the system to show in the UI badge
+        $activeCount = ProductCustomer::where('is_sold', 0)
+            ->where('auction_status', 1)
+            ->where('created_at', '>=', now()->subDay())
+            ->count();
+
+        $products = $query->paginate(10);
             
         return $this->successResponse(
-            ProductCustomerResource::collection($products)->response()->getData(true),
+            array_merge(
+                ProductCustomerResource::collection($products)->response()->getData(true),
+                ['active_count' => $activeCount]
+            ),
             'User products retrieved successfully'
         );
     }
@@ -164,6 +186,35 @@ class ProductCustomerController extends Controller
                 ]);
             }
 
+            // --- Send Notification to Roles 4 and 5 (Mobile only) ---
+            try {
+                // Get tokens for users with role 4 or 5 AND device_type = 'Mobile'
+                $tokens = \App\Models\UserFcmToken::where('device_type', 'Mobile')
+                    ->whereHas('user', function ($query) {
+                        $query->whereIn('role', [4, 5]);
+                    })
+                    ->pluck('token')
+                    ->toArray();
+
+                $tokens = array_unique($tokens);
+                
+                if (!empty($tokens)) {
+                    $title = "تم إضافة منتج جديد";
+                    $body = "قام المستخدم " . (Auth::user()->name ?? 'مستخدم') . " بإضافة منتج جديد: " . $productCustomer->name;
+                    $dataPayload = [
+                        'product_id' => (string)$productCustomer->id,
+                        'type' => 'new_product'
+                    ];
+
+                    // $this->firebaseService->sendToTokens($tokens, $title, $body, $dataPayload);
+                }
+
+            } catch (\Exception $e) {
+                // Log notification failure but don't fail the request
+                \Illuminate\Support\Facades\Log::error("Failed to send new product notification: " . $e->getMessage());
+            }
+            // ------------------------------------------
+
             return $this->successResponse(
                 new ProductCustomerResource($productCustomer),
                 'Product customer data saved successfully'
@@ -186,7 +237,7 @@ class ProductCustomerController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'status' => 'required|in:1,2', // 1: Accept, 2: Reject
+            'status' => 'required|in:0,1,2', // 0: Pending/Undo, 1: Accept, 2: Reject
         ]);
 
         if ($validator->fails()) {
@@ -196,15 +247,51 @@ class ProductCustomerController extends Controller
         $offer->status = $request->status;
         $offer->save();
 
-        // If offer is accepted (status = 1), mark product as sold
-        if ($request->status == 1) {
-            $product->is_sold = 1;
-            $product->save();
-        }
+        // is_sold logic removed per user request
 
         return $this->successResponse(
             new \App\Http\Resources\Api\User\Product\ProductCustomerOfferResource($offer),
             'Offer status updated successfully'
+        );
+    }
+
+    public function offers($id)
+    {
+        $product = ProductCustomer::where('id', $id)
+            ->where('user_id', Auth::id())
+            ->first();
+
+        if (!$product) {
+            return $this->errorResponse('Product not found or unauthorized', 404);
+        }
+
+        $offers = \App\Models\ProductCustomerOffer::where('product_customer_id', $id)
+            ->with(['merchant.city'])
+            ->latest()
+            ->paginate(5);
+
+        return $this->successResponse(
+            \App\Http\Resources\Api\User\Product\ProductCustomerOfferResource::collection($offers)->response()->getData(true),
+            'Product offers retrieved successfully'
+        );
+    }
+
+    public function toggleAuctionStatus($id)
+    {
+        $product = ProductCustomer::where('id', $id)
+            ->where('user_id', Auth::id())
+            ->first();
+
+        if (!$product) {
+            return $this->errorResponse('Product not found or unauthorized', 404);
+        }
+
+        $product->auction_status = !$product->auction_status;
+        $product->save();
+
+        return $this->successResponse(
+            new ProductCustomerResource($product),
+            'Auction status updated successfully'
         );
     }
 }

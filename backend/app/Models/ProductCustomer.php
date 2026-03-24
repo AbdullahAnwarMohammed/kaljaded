@@ -12,6 +12,7 @@ class ProductCustomer extends Model
 
     protected $casts = [
         'is_sold' => 'boolean',
+        'auction_status' => 'boolean',
     ];
 
     public function category()

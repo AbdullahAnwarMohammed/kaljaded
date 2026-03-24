@@ -28,6 +28,37 @@
   align-items: center;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-direction: row-reverse;
+
+}
+
+.notification-icon {
+  font-size: 26px;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.notification-icon svg {
+  color: #fff;
+}
+
+.notification-dot {
+  position: absolute;
+  top: 4px;
+  right: 2px;
+  width: 9px;
+  height: 9px;
+  background-color: #ff4d4d;
+  border-radius: 50%;
+  border: 1.5px solid #435292;
+}
+
 .menu-icon {
   font-size: 28px;
   cursor: pointer;
@@ -67,8 +98,8 @@
   list-style: none;
   padding: 0;
   border-top: 1px solid #eee;
-  margin-bottom: 327px;
 }
+
 
 .side-menu ul li {
   margin: 20px 0;

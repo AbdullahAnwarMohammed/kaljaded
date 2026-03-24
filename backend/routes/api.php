@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\User\ProductCustomerController;
 use App\Http\Controllers\Api\User\SiteVisitController;
 use App\Http\Controllers\Api\PaymentMyFatoorahController;
 use App\Http\Controllers\Api\User\WhatsAppController;
+use App\Http\Controllers\Api\User\NotificationController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -32,10 +33,18 @@ Route::middleware('SetLanguageFromHeader')->group(function () {
 
         Route::post('/send-otp', [AuthController::class, 'sendOtp']);
         Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
+        Route::post('/google-login', [AuthController::class, 'loginWithGoogle']);
+        Route::get('/auth/google', [AuthController::class, 'redirectToGoogle']);
+        Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
         // Route::post('/register', [AuthController::class, 'register']);
         // Route::post('/login', [AuthController::class, 'login']);
         Route::middleware('auth:sanctum')->get('/profile', [AuthController::class, 'profile']);
         Route::middleware('auth:sanctum')->post('/profile/update', [AuthController::class, 'updateProfile']);
+        Route::middleware('auth:sanctum')->post('/profile/update-phone/send-otp', [AuthController::class, 'sendUpdatePhoneOtp']);
+        Route::middleware('auth:sanctum')->post('/profile/update-phone/verify-otp', [AuthController::class, 'verifyUpdatePhoneOtp']);
+        Route::middleware('auth:sanctum')->post('/fcm-token', [AuthController::class, 'updateFcmToken']);
+        Route::get('/migrate-tokens', [AuthController::class, 'migrateTokens']); // Migration Route
+        Route::get('/test-notification', [AuthController::class, 'testNotification']); // Test Route
 
 
         // Settings
@@ -70,6 +79,8 @@ Route::middleware('SetLanguageFromHeader')->group(function () {
 
         Route::get("/banners", [BannerController::class, 'all']);
 
+        Route::get('/products/latest', [ProductController::class, 'latest']);
+        Route::get('/orders/latest', [OrderController::class, 'latestSales']);
         Route::get('/products', [ProductController::class, 'index']);
         Route::get('/products/showBySlug/{slug}', [ProductController::class, 'showBySlug']);
                 Route::get('/products/{id}', [ProductController::class, 'show'])->where('id', '[0-9]+');
@@ -80,6 +91,8 @@ Route::middleware('SetLanguageFromHeader')->group(function () {
         Route::get('/products-customer', [ProductCustomerController::class, 'index'])->middleware('auth:sanctum');
         Route::get('/products-customer/{id}', [ProductCustomerController::class, 'show'])->middleware('auth:sanctum');
         Route::post('/products-customer', [ProductCustomerController::class, 'store']);
+        Route::post('/products-customer/{id}/toggle-auction', [ProductCustomerController::class, 'toggleAuctionStatus'])->middleware('auth:sanctum');
+        Route::get('/products-customer/{id}/offers', [ProductCustomerController::class, 'offers'])->middleware('auth:sanctum');
         Route::put('/products-customer-offers/{id}/status', [ProductCustomerController::class, 'updateOfferStatus'])->middleware('auth:sanctum');
 
         Route::prefix('cart')
@@ -130,6 +143,14 @@ Route::middleware('SetLanguageFromHeader')->group(function () {
         // Site Visits
         Route::post('/site-visit', [SiteVisitController::class, 'store']);
         Route::get('/site-stats', [SiteVisitController::class, 'index']);
+        Route::get('/site-stats/current', [SiteVisitController::class, 'currentStats']);
+
+        // Notifications
+        Route::middleware('auth:sanctum')->prefix('notifications')->group(function () {
+            Route::get('/', [NotificationController::class, 'index']);
+            Route::post('/{id}/mark-as-read', [NotificationController::class, 'markAsRead']);
+            Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+        });
 
     });
 

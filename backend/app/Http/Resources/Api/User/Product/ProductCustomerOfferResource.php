@@ -16,6 +16,12 @@ class ProductCustomerOfferResource extends JsonResource
                     'id' => $this->merchant->id,
                     'name' => $this->merchant->name,
                     'image' => $this->merchant->image, 
+                    'image_vendor' => $this->merchant->image_vendor,
+                    'image_merchant' => $this->merchant->image_merchant,
+                    'city' => $this->merchant->city ? [
+                        'id' => $this->merchant->city->id,
+                        'name' => $this->merchant->city->name,
+                    ] : null,
                 ];
             }),
             'price' => $this->price,

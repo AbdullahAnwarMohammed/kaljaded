@@ -2,12 +2,13 @@ import React, { useState, useEffect, useRef } from 'react'
 import Logo from "../assets/logo.png";
 import "./LoginCustomer.css";
 import { Link, useNavigate } from "react-router-dom";
-import { RiArrowRightLine, RiUser3Line, RiLock2Line, RiPhoneLine } from "react-icons/ri";
 import Api from "../Services/Api";
 import { mergeGuestCart } from "../api/cartApi";
 import { useTranslation } from "react-i18next";
 import { useCart } from "../context/CartContext";
+import { RiArrowRightLine, RiUser3Line, RiLock2Line, RiPhoneLine, RiGoogleFill, RiGlobalLine } from "react-icons/ri";
 import Swal from 'sweetalert2';
+import { showNotificationPermissionPopup } from "../utils/notificationHelper";
 
 const Login = () => {
 
@@ -18,7 +19,7 @@ const Login = () => {
   const [step, setStep] = useState(1);
   
   const [form, setForm] = useState({
-    phone: "20",
+    phone: "",
   });
   
   // OTP State (4 digits)
@@ -31,6 +32,83 @@ const Login = () => {
   // Timer State
   const [timer, setTimer] = useState(0);
   const [canResend, setCanResend] = useState(false);
+  const [isKuwait, setIsKuwait] = useState(true);
+  const [checkingCountry, setCheckingCountry] = useState(true);
+
+  // Country Check Effect
+  useEffect(() => {
+    const checkCountry = async () => {
+      // Check if we already checked in this session
+      const cachedCountry = sessionStorage.getItem("visitor_country");
+      if (cachedCountry) {
+        if (cachedCountry !== "KW") {
+          setIsKuwait(false);
+          setErrors({ general: "عذراً، التسجيل متاح فقط من داخل دولة الكويت حالياً." });
+        }
+        setCheckingCountry(false);
+        return;
+      }
+
+      try {
+        // Primary API
+        const response = await fetch("https://ipapi.co/json/");
+        if (!response.ok) throw new Error("Rate limit or API error");
+        
+        const data = await response.json();
+        const country = data.country_code;
+        
+        sessionStorage.setItem("visitor_country", country || "unknown");
+        
+        if (country && country !== "KW") {
+          triggerBlockedAlert();
+        }
+      } catch (error) {
+        console.warn("Primary Geo-API failed, trying fallback...", error);
+        try {
+          // Fallback API (freeipapi.com) - Supports Free HTTPS
+          const fbResponse = await fetch("https://freeipapi.com/api/json");
+          const fbData = await fbResponse.json();
+          const fbCountry = fbData.countryCode; // KW, SA, etc.
+          
+          sessionStorage.setItem("visitor_country", fbCountry || "unknown");
+          if (fbCountry && fbCountry !== "KW") {
+            triggerBlockedAlert();
+          }
+        } catch (fbError) {
+          console.error("All Geo-APIs failed:", fbError);
+        }
+      } finally {
+        setCheckingCountry(false);
+      }
+    };
+
+    const triggerBlockedAlert = () => {
+      setIsKuwait(false);
+      setErrors({ general: "عذراً، التسجيل متاح فقط من داخل دولة الكويت حالياً." });
+      Swal.fire({
+        title: '<strong>عذراً!</strong>',
+        html: `
+          <div style="font-size: 1.1rem; line-height: 1.6;">
+            نعتذر منك، هذا التطبيق متاح حصراً للمستخدمين داخل دولة الكويت.
+          </div>
+        `,
+        icon: 'warning',
+        iconColor: '#ff6b6b',
+        background: '#ffffff',
+        showCloseButton: true,
+        confirmButtonText: 'حسناً، فهمت',
+        confirmButtonColor: '#435292',
+        customClass: {
+          popup: 'premium-swal-popup',
+          title: 'premium-swal-title',
+          confirmButton: 'premium-swal-button'
+        },
+        allowOutsideClick: true
+      });
+    };
+
+    checkCountry();
+  }, []);
 
   // Timer Effect
   useEffect(() => {
@@ -45,26 +123,68 @@ const Login = () => {
     return () => clearInterval(interval);
   }, [timer]);
 
+  // Auto-focus first OTP input when switching to step 2
+  useEffect(() => {
+    if (step === 2) {
+      setTimeout(() => {
+        if (inputRefs.current[0]) {
+          inputRefs.current[0].focus();
+        }
+      }, 500);
+    }
+  }, [step]);
+
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    setErrors({ ...errors, [e.target.name]: "" });
+    const { name, value } = e.target;
+    // Allow only digits
+    const cleanValue = value.replace(/\D/g, "");
+    setForm({ ...form, [name]: cleanValue });
+    setErrors({ ...errors, [name]: "" });
   };
 
   const handleOtpChange = (index, value) => {
-    if (isNaN(value)) return;
+    // Clear errors when user starts typing or deleting
+    if (errors.code || errors.general) {
+        setErrors(prev => ({ ...prev, code: "", general: "" }));
+    }
+
+    const val = value.replace(/\D/g, ""); // Keep only digits
+    
+    // Handle multiple digits (auto-fill or paste)
+    if (val.length > 1) {
+        const digits = val.split("").slice(0, 4);
+        const newOtp = [...otp];
+        digits.forEach((d, i) => {
+            if (index + i < 4) newOtp[index + i] = d;
+        });
+        setOtp(newOtp);
+        // Focus the last filled input
+        const finalIdx = Math.min(index + digits.length - 1, 3);
+        inputRefs.current[finalIdx].focus();
+        return;
+    }
+
+    // Normal single char input or delete
     const newOtp = [...otp];
-    newOtp[index] = value;
+    newOtp[index] = val;
     setOtp(newOtp);
 
     // Auto-focus next input
-    if (value && index < 3) {
+    if (val && index < 3) {
       inputRefs.current[index + 1].focus();
     }
   };
 
   const handleKeyDown = (index, e) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      inputRefs.current[index - 1].focus();
+    if (e.key === "Backspace") {
+      // Clear errors on backspace
+      if (errors.code || errors.general) {
+        setErrors(prev => ({ ...prev, code: "", general: "" }));
+      }
+      
+      if (!otp[index] && index > 0) {
+        inputRefs.current[index - 1].focus();
+      }
     }
   };
 
@@ -93,25 +213,25 @@ const Login = () => {
     return true;
   };
 
+
+
+
+
+  
   const handleSendOtp = async (e) => {
     if(e) e.preventDefault();
     if (!validatePhone()) return;
 
     try {
       setLoading(true);
-      await Api.post("/send-otp", { phone: form.phone });
+      const fullPhone = "965" + form.phone;
+      await Api.post("/send-otp", { phone: fullPhone });
       setStep(2);
       setTimer(60);
       setCanResend(false);
       setOtp(["", "", "", ""]);
       setErrors({});
-      Swal.fire({
-        icon: 'success',
-        title: 'تم الإرسال',
-        text: 'تم إرسال رمز التحقق بنجاح',
-        timer: 1500,
-        showConfirmButton: false
-      });
+  
     } catch (error) {
       console.log(error);
       if (error.response?.data?.errors) {
@@ -140,11 +260,23 @@ const Login = () => {
 
     try {
       setLoading(true);
-      const response = await Api.post("/verify-otp", { phone: form.phone, code });
+      const fullPhone = "965" + form.phone;
+      const response = await Api.post("/verify-otp", { phone: fullPhone, code });
       
       localStorage.setItem("customer_token", response.data.data.token);
       localStorage.setItem("customer", JSON.stringify(response.data.data.user));
       
+      // Request FCM Token
+      // await showNotificationPermissionPopup(); // Wait for user action
+      // Note: We don't strictly await this because we don't want to block the user from entering the app if they ignore the popup, 
+      // but to ensure the popup *shows* before navigation, we might want to delay slightly or just fire-and-forget but ensuring the component doesn't unmount 
+      // immediately in a way that kills the popup. 
+      // Actually, SweetAlert2 attaches to document.body, so navigation *might* not kill it, 
+      // BUT if we navigate to a new page, the logic might get confusing.
+      // Better UX: Ask for permission, then go.
+      
+      await showNotificationPermissionPopup();
+
       try {
         await mergeGuestCart();
         setCart(null);
@@ -154,24 +286,40 @@ const Login = () => {
         await fetchCart();
       }
       
-      navigate("/");
+      const user = response.data.data.user;
+      if (!user.name) {
+          navigate("/complete-profile");
+      } else {
+          navigate("/");
+      }
     } catch (error) {
+        let errorMsg = "رمز التحقق غير صحيح";
+        
         if (error.response?.data?.errors) {
             setErrors(error.response.data.errors);
         } else if (error.response?.data?.message) {
-            setErrors({ general: error.response.data.message });
+            // Translate backend error messages
+            if (error.response.data.message === "messages.invalid_otp") {
+               errorMsg = t("invalid_otp") || "رمز التحقق غير صحيح";
+            } else {
+               errorMsg = error.response.data.message;
+            }
+            // Set error for both general display and input styling
+            setErrors({ general: errorMsg, code: errorMsg });
         } else {
-            setErrors({ general: "رمز التحقق غير صحيح" });
+            setErrors({ general: errorMsg, code: errorMsg });
         }
-        Swal.fire({
-            icon: 'error',
-            title: 'خطأ',
-            text: error.response?.data?.message || 'رمز التحقق غير صحيح',
-        });
-    } finally {
-      setLoading(false);
-    }
-  };
+        // Result is already shown inline via setErrors
+
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    const handleGoogleLogin = () => {
+        const apiUrl = import.meta.env.VITE_API_URL;
+        window.location.href = `${apiUrl}/auth/google`;
+    };
 
   const { t } = useTranslation();
 
@@ -182,84 +330,145 @@ const Login = () => {
         <RiArrowRightLine />
       </Link>
 
-      <img src={Logo} className='logo' alt="" />
+      {isKuwait && !checkingCountry && (
+        <div className="login-header-text">
+            <h2 style={{
+                fontSize: '2rem', 
+                fontWeight: 'bold', 
+                color: '#fff', 
+                margin: '10px 0px', 
+            
+                padding: '7px 0px',
+                display: 'inline-block'
+            }}>
+              سجل <span style={{color: '#ffd700'}}>بخطوتين</span> فقط ؟
+            </h2>
+        </div>
+      )}
 
       <div className="app-login">
-
-        <h3>{step === 1 ? t("login_title") : t("enter_otp")}</h3>
-        {step === 2 && <p className="otp-subtitle">{t("otp_subtitle", { phone: form.phone })}</p>}
-        {errors.general && <div className="general-error">{errors.general}</div>}
-
-        <form onSubmit={step === 1 ? handleSendOtp : handleVerifyOtp}>
-
-          {step === 1 && (
-            <div className="form-group">
-                <div className="input-wrapper">
-                <RiPhoneLine className="field-icon" />
-                <input
-                    type="text"
-                    name="phone"
-                    placeholder={t("phone")}
-                    value={form.phone}
-                    onChange={handleChange}
-                    className={`form-control ${errors.phone ? "input-error" : ""}`}
-                />
-                </div>
-                {errors.phone && <div className='error-msg'>{errors.phone}</div>}
-
-                {timer > 0 && (
-                    <div className="otp-timer" style={{color: '#ff6b6b', marginTop: '10px'}}>
-                        {t("resend_wait", { seconds: timer })}
-                    </div>
-                )}
+        {!isKuwait && !checkingCountry ? (
+          <div className="service-not-available">
+            <div className="not-available-icon-wrapper">
+              <RiGlobalLine className="not-available-icon" />
             </div>
-          )}
+            <h3>عذراً، الخدمة غير متاحة</h3>
+            <p>
+              نعتذر منك، تطبيق "كل جديد" متاح حالياً حصراً للمستخدمين داخل دولة الكويت. 
+              يمكنك متابعة العروض والمنتجات كزائر فقط.
+            </p>
+            <div style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
+              <Link to="/" className="back-home-btn">
+                <RiArrowRightLine /> التصفح كزائر
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <>
+            <h3>{step === 1 ? t("login_title") : t("enter_otp")}</h3>
+            {step === 2 && <p className="otp-subtitle">{t("otp_subtitle", { phone: form.phone })}</p>}
+            {errors.general && <div className="general-error">{errors.general}</div>}
 
-          {step === 2 && (
-            <div className="form-group">
-                <div className="otp-container" onPaste={handlePaste}>
-                    {otp.map((digit, index) => (
+            <form onSubmit={step === 1 ? handleSendOtp : handleVerifyOtp}>
+
+              {step === 1 && (
+                <div className="form-group">
+                    <div className="input-wrapper custom-phone-input">
+                        <div className="phone-prefix">
+                            <RiPhoneLine className="prefix-icon" />
+                            <span>965</span>
+                        </div>
+                        <div className="input-divider"></div>
                         <input
-                            key={index}
-                            type="text"
-                            maxLength={1}
-                            value={digit}
-                            onChange={(e) => handleOtpChange(index, e.target.value)}
-                            onKeyDown={(e) => handleKeyDown(index, e)}
-                            ref={(el) => (inputRefs.current[index] = el)}
-                            className={`otp-input ${errors.code ? "input-error" : ""}`}
+                            type="tel"
+                            inputMode="numeric"
+                            name="phone"
+                            placeholder={t("phone")}
+                            value={form.phone}
+                            onChange={handleChange}
+                            className={`form-control ${errors.phone ? "input-error" : ""}`}
+                            disabled={checkingCountry}
                         />
-                    ))}
-                </div>
-                {errors.code && <div className='error-msg text-center'>{errors.code}</div>}
-                
-                <div className="otp-timer">
-                    {canResend ? (
-                        <button type="button" className="resend-btn" onClick={() => handleSendOtp(null)}>
-                            إعادة إرسال الرمز
-                        </button>
-                    ) : (
-                        <span>{t("resend_wait", { seconds: timer })}</span>
+                    </div>
+                    {errors.phone && <div className='error-msg'>{errors.phone}</div>}
+
+                    {timer > 0 && (
+                        <div className="otp-timer" style={{color: '#ff6b6b', marginTop: '10px'}}>
+                            {t("resend_wait", { seconds: timer })}
+                        </div>
                     )}
                 </div>
+              )}
 
-            </div>
-          )}
+              {step === 2 && (
+                <div className="form-group">
+                    <div className="otp-container" onPaste={handlePaste}>
+                        {otp.map((digit, index) => (
+                            <input
+                                key={index}
+                                type="text"
+                                inputMode="numeric"
+                                autoComplete={index === 0 ? "one-time-code" : "off"}
+                                maxLength={index === 0 ? 4 : 1}
+                                
+                                onChange={(e) => handleOtpChange(index, e.target.value)}
+                                onKeyDown={(e) => handleKeyDown(index, e)}
+                                ref={(el) => (inputRefs.current[index] = el)}
+                                className={`otp-input ${errors.code ? "input-error" : ""}`}
+                            />
+                        ))}
+                    </div>
+                    {errors.code && <div className='error-msg text-center'>{errors.code}</div>}
+                    
+                    <div className="otp-timer">
+                        {canResend ? (
+                            <button type="button" className="resend-btn" onClick={() => handleSendOtp(null)}>
+                                إعادة إرسال الرمز
+                            </button>
+                        ) : (
+                            <span>{t("resend_wait", { seconds: timer })}</span>
+                        )}
+                    </div>
 
-          <div className="form-group">
-            <button type='submit' disabled={loading || (step === 1 && timer > 0)}>
-              {loading ? t("login_loading") : (step === 1 ? t("submit_send_otp") : t("submit_verify_otp"))}
-            </button>
-          </div>
+                </div>
+              )}
 
-          {step === 2 && (
-            <div style={{marginTop: '10px', textAlign: 'center'}}>
-                <span style={{cursor: 'pointer', color: '#fff', fontSize: '14px',fontWeight:'bold'}} onClick={() => { setStep(1); }}>{t("change_phone")}</span>
-            </div>
-          )}
+              <div className="form-group">
+                <button type='submit' disabled={loading || (step === 1 && timer > 0) || checkingCountry}>
+                  {checkingCountry ? "جاري التحقق من الموقع..." : loading ? t("login_loading") : (step === 1 ? t("submit_send_otp") : t("submit_verify_otp"))}
+                </button>
+              </div>
+      
+              {step === 1 && (
+                  <>
+                      <div className="login-divider">
+                          <span>{t("or") || "أو"}</span>
+                      </div>
+      
+                      <div className="form-group">
+                          <button type="button" className="google-login-btn" onClick={handleGoogleLogin} disabled={loading || checkingCountry}>
+                              <RiGoogleFill className="google-icon" />
+                              {t("login_with_google") || "تسجيل الدخول بواسطة جوجل"}
+                          </button>
+                      </div>
+                  </>
+              )}
+      
+              <div style={{ textAlign: 'center', marginTop: '15px' }}>
+                <Link to="/" style={{ color: '#fff', textDecoration: 'underline', fontSize: '16px' }}>
+                  الدخول كزائر
+                </Link>
+              </div>
 
-        </form>
+              {step === 2 && (
+                <div style={{marginTop: '10px', textAlign: 'center'}}>
+                    <span style={{cursor: 'pointer', color: '#fff', fontSize: '14px',fontWeight:'bold'}} onClick={() => { setStep(1); }}>{t("change_phone")}</span>
+                </div>
+              )}
 
+            </form>
+          </>
+        )}
       </div>
     </div>
   )

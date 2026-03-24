@@ -48,11 +48,11 @@ const RegisterCustomer = () => {
         }
 
         // هاتف كويتي
-        const kuwaitPhoneRegex = /^(5|6|9)\d{7}$/;
+        const kuwaitPhoneRegex = /^[24569]\d{7}$/;
         if (!form.phone.trim()) {
             newErrors.phone = "رقم الهاتف مطلوب";
         } else if (!kuwaitPhoneRegex.test(form.phone)) {
-            newErrors.phone = "رقم الهاتف يجب أن يكون كويتياً من 8 أرقام ويبدأ بـ 5 أو 6 أو 9";
+            newErrors.phone = "رقم الهاتف يجب أن يكون كويتياً من 8 أرقام";
         }
 
         // كلمة المرور

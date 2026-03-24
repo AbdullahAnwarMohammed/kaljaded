@@ -45,7 +45,7 @@ const Welcome = () => {
                 <p>{t("social_accounts")}</p>
 
                 <div className='social'>
-                    {socials.instgram && (
+                    {/* {socials.instgram && (
                         <a href={socials.instgram} target="_blank" rel="noopener noreferrer">
                             <IoLogoInstagram />
                         </a>
@@ -54,7 +54,19 @@ const Welcome = () => {
                         <a href={socials.tiktok} target="_blank" rel="noopener noreferrer">
                             <FaTiktok />
                         </a>
-                    )}
+                    )} */}
+
+
+                        <a href="#" target="_blank" rel="noopener noreferrer">
+                            <IoLogoInstagram />
+                        </a>
+                 
+                   
+                        <a href="#" target="_blank" rel="noopener noreferrer">
+                            <FaTiktok />
+                        </a>
+                   
+
 
                     {/* {socials.whatsapp && (
                         <a href={`https://wa.me/${socials.whatsapp.replace("+", "")}`} target="_blank" rel="noopener noreferrer">

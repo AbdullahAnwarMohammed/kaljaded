@@ -22,7 +22,7 @@ class ProductController extends Controller
         $perPage = $request->query('per_page', 25);
         $search = $request->query('search');
 
-        $query = Product::with(['category', 'subcategory', 'subsubcategory'])
+        $query = Product::with(['category', 'subcategory', 'subsubcategory', 'merchant'])
             ->where(function($q) {
                   $q->where('fast_by', '!=', 1)
                     ->orWhereNull('fast_by');
@@ -49,7 +49,7 @@ class ProductController extends Controller
 
     public function showBySlug(string $slug)
     {
-        $product = Product::with(['category', 'subcategory', 'subsubcategory'])
+        $product = Product::with(['category', 'subcategory', 'subsubcategory', 'merchant'])
             ->where('slug', $slug)
             ->first();
 
@@ -66,7 +66,7 @@ class ProductController extends Controller
     }
     public function show($id)
     {
-        $product = Product::with(['category', 'subcategory', 'subsubcategory'])->find($id);
+        $product = Product::with(['category', 'subcategory', 'subsubcategory', 'merchant'])->find($id);
 
         if (! $product) {
             return $this->errorResponse('messages.product_not_found', 404);
@@ -78,6 +78,40 @@ class ProductController extends Controller
             new ProductResource($product),
             'messages.product_details'
         );
+    }
+
+    public function latest(Request $request)
+    {
+        $perPage = $request->query('per_page', 25);
+        $search = $request->query('search');
+
+        $query = Product::with(['category', 'subcategory', 'subsubcategory', 'merchant'])
+            ->where(function ($q) {
+                $q->where('fast_by', '!=', 1)
+                    ->orWhereNull('fast_by');
+            })
+            ->where('isactive', 1)
+            ->orderBy('id', 'desc');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                    ->orWhere('nameen', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $products = $query->paginate($perPage);
+
+        return $this->successResponse([
+            'category' => ['name' => 'احدث المتوفر'],
+            'products' => ProductResource::collection($products),
+            'meta' => [
+                'current_page' => $products->currentPage(),
+                'last_page' => $products->lastPage(),
+                'per_page' => $products->perPage(),
+                'total' => $products->total(),
+            ],
+        ], 'messages.successfully');
     }
 
     private function recordView($product)
@@ -113,7 +147,7 @@ class ProductController extends Controller
         $perPage = $request->get('per_page', 10);
         $query = $request->get('q');
 
-        $products = Product::query()
+        $products = Product::with(['category', 'subcategory', 'subsubcategory', 'merchant'])
             ->when($query, function ($q) use ($query) {
                 $q->where(function ($queryBuilder) use ($query) {
                     $queryBuilder->where('name', 'LIKE', "%$query%")
@@ -145,7 +179,7 @@ class ProductController extends Controller
             return $this->errorResponse('products.not_found', 404);
         }
         $search = $request->query('search');
-        $productsQuery = Product::query()
+        $productsQuery = Product::with(['category', 'subcategory', 'subsubcategory', 'merchant'])
             ->where('price_active', 1);
         if ($category) {
             $productsQuery->where('category_id', $category->id);

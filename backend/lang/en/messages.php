@@ -11,5 +11,9 @@ return [
     'send_otp' => 'The code was sent successfully',
     'successfully otp' => 'The code is correct',
     'successfully_password' => 'Password changed successfully',
+    "invalid_otp" => "Invalid OTP",
+    'site_stats_retrieved' => 'Site stats retrieved successfully',
+    'current_site_stats_retrieved' => 'Current site stats retrieved successfully',
+
 
 ];

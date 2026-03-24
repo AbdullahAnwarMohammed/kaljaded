@@ -30,6 +30,7 @@ const ProductByCategory = ({ isInstallment = false }) => {
 
     const pathname = location.pathname;
     const isAllProducts = slug === 'all' || pathname === '/products';
+    const isLatest = slug === 'latest';
 
     const fetchedSlugs = useRef(new Set());
 
@@ -37,7 +38,7 @@ const ProductByCategory = ({ isInstallment = false }) => {
         const cacheKey = `products_${slug || 'all'}_${subSlug || ''}_${isInstallment}`;
         const cached = localStorage.getItem(cacheKey);
         
-        if (cached) {
+        if (cached && !isLatest) {
             const data = JSON.parse(cached);
             setProducts(data.products);
             setCategory(data.category);
@@ -51,14 +52,14 @@ const ProductByCategory = ({ isInstallment = false }) => {
 
         const currentSlugKey = `${slug || 'all'}_${subSlug || ''}_${isInstallment}`;
         // If we haven't fetched this slug in this session, or if it's the first load
-        if (!fetchedSlugs.current.has(currentSlugKey)) {
+        if (!fetchedSlugs.current.has(currentSlugKey) || isLatest) {
             if (currentPage === 1) {
                 fetchProducts(1);
             } else {
                 setCurrentPage(1);
                 fetchProducts(1);
             }
-            fetchedSlugs.current.add(currentSlugKey);
+            if (!isLatest) fetchedSlugs.current.add(currentSlugKey);
         } else {
             // Already fetched in this session, just ensure we are on page 1
             if (currentPage !== 1) setCurrentPage(1);
@@ -99,6 +100,8 @@ const ProductByCategory = ({ isInstallment = false }) => {
             if (isInstallment) {
                 url = `/categories/products/active/${slug || ''}?page=${page}`;
                 if (subSlug) url += `&sub=${subSlug}`;
+            } else if (isLatest) {
+                url = `/products/latest?page=${page}`;
             } else if (isAllProducts) {
                 url = `/categories/products?page=${page}`;
             } else {
@@ -115,6 +118,7 @@ const ProductByCategory = ({ isInstallment = false }) => {
 
             let newCategoryData = null;
             if (isInstallment) newCategoryData = { name: 'الأقساط', subcategories: catData?.subcategories || [] };
+            else if (isLatest) newCategoryData = { name: t("latest_available") };
             else if (!isAllProducts) newCategoryData = catData;
             else newCategoryData = { name: 'كل المنتجات' };
 
@@ -181,6 +185,14 @@ const ProductByCategory = ({ isInstallment = false }) => {
                         className={`category-tab ${isAllProducts ? 'active' : ''}`}
                         to={isInstallment ? '/category/installments' : '/products'}
                     >الكل</Link>
+                    
+                    {!isInstallment && (
+                        <Link
+                            className={`category-tab ${isLatest ? 'active' : ''}`}
+                            to="/category/latest"
+                        >{t("latest_available")}</Link>
+                    )}
+
                     {categories.map(cat => (
                         <Link
                             key={cat.id}

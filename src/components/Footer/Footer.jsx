@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { CiCirclePlus } from "react-icons/ci";
 import { FaTimes } from "react-icons/fa";
 import { 
@@ -16,10 +16,11 @@ import { useTranslation } from "react-i18next";
 const Footer = () => {
     const { t } = useTranslation();
     const { cartCount, cart } = useCart();
+    const location = useLocation();
     const [isBannerVisible, setIsBannerVisible] = useState(true);
 
     const totalPrice = cart?.total_price || cart?.total || 0; 
-    const showBanner = cartCount > 0 && isBannerVisible;
+    const showBanner = cartCount > 0 && isBannerVisible && location.pathname !== "/carts" && location.pathname !== "/request-product";
 
     const handleCloseBanner = (e) => {
         e.preventDefault(); 
@@ -84,8 +85,8 @@ const Footer = () => {
                     </NavLink>
                 </div>
 
-
-                {/* <div className="item added">
+{/* 
+                <div className="item added">
                     <NavLink
                         to="/request-product"
                         className={({ isActive }) =>

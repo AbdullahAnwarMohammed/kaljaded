@@ -6,7 +6,7 @@
   --color-main-two: #283158;
 }
 #root {
-  overflow: hidden;
+  overflow-x: hidden;
 }
 body,
 a {

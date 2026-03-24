@@ -8,18 +8,22 @@ use App\Models\Product;
 use App\Models\CartItem;
 use App\Models\FavoriteItem;
 use App\Services\DeemaService;
+use App\Services\WaSenderApiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 
 class PaymentDemaController extends Controller
 {
     protected DeemaService $deema;
+    protected WaSenderApiService $waSender;
 
-    public function __construct(DeemaService $deema)
+    public function __construct(DeemaService $deema, WaSenderApiService $waSender)
     {
         $this->deema = $deema;
+        $this->waSender = $waSender;
     }
 
     public function checkout(Request $request)
@@ -27,7 +31,7 @@ class PaymentDemaController extends Controller
         $user = $request->user(); // مستخدم Sanctum
 
         $request->validate([
-            'productid' => 'required|exists:products,id',
+            'productid' => 'nullable|exists:products,id',
             'customer_name' => 'required|string',
             'customer_phone' => 'required|string',
             'latitude' => 'nullable|numeric',
@@ -35,16 +39,35 @@ class PaymentDemaController extends Controller
             'useraddress' => 'nullable|string',
         ]);
 
-        $product = Product::findOrFail($request->productid);
-        $amount = $product->price;
-        $merchantOrderId = 'ORD-' . $product->id;
+        $productIds = [];
+        $amount = 0;
+        $merchantOrderId = '';
 
+        if ($request->productid) {
+            $product = Product::findOrFail($request->productid);
+            $productIds[] = $product->id;
+            $amount = $product->price;
+            $merchantOrderId = 'ORD-' . $product->id . '-' . date("Y-m-d-His");
+        } else {
+            // Get from cart
+            $cart = \App\Models\Cart::where('user_id', $user->id)->with('items.product')->first();
+            if (!$cart || $cart->items->isEmpty()) {
+                return response()->json(['success' => false, 'message' => 'Cart is empty'], 400);
+            }
+            foreach ($cart->items as $item) {
+                if ($item->product) {
+                    $productIds[] = $item->product->id;
+                    $amount += ($item->price * $item->quantity);
+                }
+            }
+            $merchantOrderId = 'ORD-' . implode('-', $productIds) . '-' . date("Y-m-d-His");
+        }
         Cache::put(
             'deema_order_' . $merchantOrderId,
             [
                 'merchant_order_id' => $merchantOrderId,
                 'user_id'           => $user->id,
-                'product_id'        => $product->id,
+                'product_ids'       => $productIds,
                 'amount'            => $amount,
                 'customer_name'     => $request->customer_name,
                 'customer_phone'    => $request->customer_phone,
@@ -84,7 +107,7 @@ class PaymentDemaController extends Controller
     public function success(Request $request)
     {
         $reference = $request->reference ?? $request->order_reference;
-        \Log::info("Payment Success Callback Reference: " . $reference);
+        Log::info("Payment Success Callback Reference: " . $reference);
 
         if (!$reference) {
             return response()->json(['message' => 'No reference provided'], 400);
@@ -92,112 +115,150 @@ class PaymentDemaController extends Controller
 
         // Verify status with Deema
         $statusResponse = $this->deema->getOrderStatus($reference);
-        \Log::info('DEEMA STATUS RESPONSE', (array)$statusResponse);
+        Log::info('DEEMA STATUS RESPONSE', (array)$statusResponse);
 
         $status = strtoupper($statusResponse['data']['status'] ?? '');
         if (!in_array($status, ['APPROVED', 'CAPTURED'])) {
             return response()->json(['message' => 'Payment not approved'], 400);
         }
 
+
         // Retrieve cached order data
-        $cached = Cache::get('deema_order_' . $reference);
+        $cached = \Illuminate\Support\Facades\Cache::get('deema_order_' . $reference);
         if (!$cached) {
             return response()->json(['message' => 'Order expired from cache'], 410);
         }
 
         $merchantOrderId = $cached['merchant_order_id'];
 
-        // Prevent duplicate orders
-        if (Order::where('merchant_order_id', $merchantOrderId)->exists()) {
-            return response()->json(['message' => 'Order already created']);
+
+
+        $productIds = $cached['product_ids'] ?? [];
+        if (empty($productIds) && isset($cached['product_id'])) {
+            $productIds = [$cached['product_id']];
         }
 
-        $product = Product::find($cached['product_id']);
-        if (!$product) {
-            return response()->json(['message' => 'Product not found'], 404);
+        if (empty($productIds)) {
+            return response()->json(['message' => 'No products found in order'], 404);
         }
 
         try {
-            Order::create([
-                'productid'            => $product->id,
+            foreach ($productIds as $pId) {
+                $product = Product::find($pId);
+                if (!$product) continue;
 
-                // Use cached user data (Buyer info)
-                'userid'               => $cached['user_id'] ?? 0,
-                'username'             => $cached['customer_name'] ?? '',
-                'userphone'            => $cached['customer_phone'] ?? '',
-                'latitude'             => $cached['latitude'] ?? 0,
-                'longitude'            => $cached['longitude'] ?? 0,
-                'useraddress'          => $cached['useraddress'] ?? '',
+                $productMerchantOrderId = 'ORD-' . $product->id . '-' . date("Y-m-d-His");
 
-                'totalprice'           => $product->price ?? 0,
-                'typepay'              => 'installment',
-                'order_source'         => 'Web',
-                'status'               => 1,
-                'date_receipt'         => '',
-                'merchant_order_id'    => $merchantOrderId ?? '',
+                // Prevent duplicate for this specific product
+                if (Order::where('productid', $product->id)->where('merchant_order_id', $productMerchantOrderId)->exists()) {
+                    continue;
+                }
+
+                Order::create([
+                    'productid'            => $product->id,
+
+                    // Use cached user data (Buyer info)
+                    'order_reference'      => $reference,
+                    'userid'               => $cached['user_id'] ?? 0,
+                    'username'             => $cached['customer_name'] ?? '',
+                    'userphone'            => $cached['customer_phone'] ?? '',
+                    'latitude'             => $cached['latitude'] ?? 0,
+                    'longitude'            => $cached['longitude'] ?? 0,
+                    'useraddress'          => $cached['useraddress'] ?? '',
+
+                    'totalprice'           => $product->price ?? 0,
+                    'typepay'              => 'installment',
+                    'order_source'         => 'Web',
+                    'status'               => 1,
+                    'date_receipt'         => '',
+                    'merchant_order_id'    => $productMerchantOrderId,
+                    
+                    // Product Data Snapshot
+                    'name'                 => $product->name ?? '',
+                    'nameen'               => $product->nameen ?? '',
+                    'isactive'             => $product->isactive ?? 1,
+                    'description'          => $product->description ?? '',
+                    'descriptionen'        => $product->descriptionen ?? '',
+                    'price'                => $product->price ?? 0,
+                    'price_old'            => $product->price_old ?? 0,
+                    'price_sale'           => $product->price_sale ?? 0,
+                    'price_active'         => $product->price_active ?? 0,
+                    'sub_sub_category_id'  => $product->sub_sub_category_id ?? 0,
+                    'category_id'          => $product->category_id ?? 0,
+                    'sub_category_id'      => $product->sub_category_id ?? 0,
+                    'rating'               => $product->rating ?? 0,
+                    'view'                 => $product->view ?? 0,
+                    'images'               => $product->images ?? '',
+                    'date'                 => now(),
+                    'barcode'              => $product->barcode ?? '',
+                    'serialnumber'         => $product->serialnumber ?? '',
+                    
+                    // Deema/Customer specific
+                    'customer_name'        => $cached['customer_name'] ?? '',
+                    'customer_phone'       => $cached['customer_phone'] ?? '',
+                    
+                    // Fill other nullable fields as needed by your schema or keep null
+                    'userinsert'           => $product->userinsert ?? '',
+                    'iduserinsert'         => $product->iduserinsert ?? 0,
+                    'iduserupdate'         => $product->iduserupdate ?? 0,
+                    'number'               => $product->number ?? '',
+                    'memorysize'           => $product->memorysize ?? '',
+                    'ramsize'              => $product->ramsize ?? '',
+                    'colorar'              => $product->colorar ?? '',
+                    'coloren'              => $product->coloren ?? '',
+                    'device_status'        => $product->device_status ?? '',
+                    'device_clean'         => $product->device_clean ?? '',
+                    'device_body'          => $product->device_body ?? '',
+                    'device_display'       => $product->device_display ?? '',
+                    'device_button'        => $product->device_button ?? '',
+                    'device_camera'        => $product->device_camera ?? '',
+                    'device_wifi_blu'      => $product->device_wifi_blu ?? '',
+                    'device_battery'       => $product->device_battery ?? '',
+                    'device_fingerprint'   => $product->device_fingerprint ?? '',
+                    'device_speaker'       => $product->device_speaker ?? '',
+                    'device_box'           => $product->device_box ?? '',
+                    'note'                 => $product->note ?? '',
+                    'gift'                 => $product->gift ?? '',
+                    'fast_by'              => $product->fast_by ?? 0,
+                    'slug'                 => $product->slug ?? '',
+                    'customer_approved'    => $product->customer_approved ?? 0,
+                    'customer_approved_name' => $product->customer_approved_name ?? '',
+                    'product_active_new'     => $product->product_active_new ?? 0,
+                ]);
+
+                // Delete from all carts and favorites
+                CartItem::where('product_id', $product->id)->delete();
+                FavoriteItem::where('product_id', $product->id)->delete();
+
+                $product->delete();
+            }
+
+            // Send WhatsApp Notification to Customer
+            $customerPhone = $cached['customer_phone'] ?? null;
+            if ($customerPhone) {
+                $message = "شكراً لطلبك من *كالجديد*! 🔔\n\n";
+                $message .= "تم استلام طلبك (تقسيط ديمة) بنجاح وجاري معالجته.\n\n";
+                $message .= "📍 *تفاصيل الطلب:*\n";
+                $message .= "• *مرجع الدفع:* {$reference}\n";
+                $message .= "• *العنوان:* " . ($cached['useraddress'] ?? 'غير معروف') . "\n\n";
+                $message .= "📦 *المنتجات:*\n";
                 
-                // Product Data Snapshot
-                'name'                 => $product->name ?? '',
-                'nameen'               => $product->nameen ?? '',
-                'isactive'             => $product->isactive ?? 1,
-                'description'          => $product->description ?? '',
-                'descriptionen'        => $product->descriptionen ?? '',
-                'price'                => $product->price ?? 0,
-                'price_old'            => $product->price_old ?? 0,
-                'price_sale'           => $product->price_sale ?? 0,
-                'price_active'         => $product->price_active ?? 0,
-                'sub_sub_category_id'  => $product->sub_sub_category_id ?? 0,
-                'category_id'          => $product->category_id ?? 0,
-                'sub_category_id'      => $product->sub_category_id ?? 0,
-                'rating'               => $product->rating ?? 0,
-                'view'                 => $product->view ?? 0,
-                'images'               => $product->images ?? '',
-                'date'                 => now(),
-                'barcode'              => $product->barcode ?? '',
-                'serialnumber'         => $product->serialnumber ?? '',
+                foreach ($productIds as $pId) {
+                    $p = Product::find($pId);
+                    if ($p) {
+                        $message .= "- {$p->name} ({$p->price} K.D)\n";
+                    }
+                }
                 
-                // Deema/Customer specific
-                'customer_name'        => $cached['customer_name'] ?? '',
-                'customer_phone'       => $cached['customer_phone'] ?? '',
-                
-                // Fill other nullable fields as needed by your schema or keep null
-                'userinsert'           => $product->userinsert ?? '',
-                'iduserinsert'         => $product->iduserinsert ?? 0,
-                'iduserupdate'         => $product->iduserupdate ?? 0,
-                'number'               => $product->number ?? '',
-                'memorysize'           => $product->memorysize ?? '',
-                'ramsize'              => $product->ramsize ?? '',
-                'colorar'              => $product->colorar ?? '',
-                'coloren'              => $product->coloren ?? '',
-                'device_status'        => $product->device_status ?? '',
-                'device_clean'         => $product->device_clean ?? '',
-                'device_body'          => $product->device_body ?? '',
-                'device_display'       => $product->device_display ?? '',
-                'device_button'        => $product->device_button ?? '',
-                'device_camera'        => $product->device_camera ?? '',
-                'device_wifi_blu'      => $product->device_wifi_blu ?? '',
-                'device_battery'       => $product->device_battery ?? '',
-                'device_fingerprint'   => $product->device_fingerprint ?? '',
-                'device_speaker'       => $product->device_speaker ?? '',
-                'device_box'           => $product->device_box ?? '',
-                'note'                 => $product->note ?? '',
-                'gift'                 => $product->gift ?? '',
-                'fast_by'              => $product->fast_by ?? 0,
-                'slug'                 => $product->slug ?? '',
-                'customer_approved'    => $product->customer_approved ?? 0,
-                'customer_approved_name' => $product->customer_approved_name ?? '',
-                'product_active_new'     => $product->product_active_new ?? 0,
-            ]);
+                $message .= "\n💰 *الإجمالي:* {$cached['amount']} K.D\n\n";
+                $message .= "شكراً لثقتك بنا! نتمنى لك يوماً سعيداً.";
 
-            // Cleanup Cache & Product only if Order creation succeeds
-            Cache::forget('deema_order_' . $reference);
-            Cache::forget('deema_order_' . $merchantOrderId);
+                $this->waSender->sendTextMessage($customerPhone, $message);
+            }
 
-            // Delete from all carts and favorites
-            CartItem::where('product_id', $product->id)->delete();
-            FavoriteItem::where('product_id', $product->id)->delete();
-
-            $product->delete();
+            // Cleanup Cache
+            \Illuminate\Support\Facades\Cache::forget('deema_order_' . $reference);
+            \Illuminate\Support\Facades\Cache::forget('deema_order_' . $merchantOrderId);
 
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error("Deema Callback Order Create Error: " . $e->getMessage());

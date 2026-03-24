@@ -4,28 +4,36 @@ import { useTranslation } from "react-i18next";
 import { MdOutlinePayment } from "react-icons/md";
 import { CiDeliveryTruck } from "react-icons/ci";
 
-const PaymentForm = ({ formData, onBack, onSubmit, cartTotal, paymentMethods = [] }) => {
+import deema_image from "../../assets/dema-logo.png";
+
+const PaymentForm = ({ formData, onBack, onSubmit, cartTotal, paymentMethods = [], selectedMethodId, setSelectedMethodId }) => {
     const { t, i18n } = useTranslation();
-    // Determine initial selected method (default to COD or first online method?)
-    // Let's default to COD for now as it's simple, or 'myfatoorah' if available
-    const [selectedMethodId, setSelectedMethodId] = useState("cod"); // 'cod' or PaymentMethodId (int)
+    // Use props instead of local state for consistency across tabs
 
     // Address Validation
-    const requiredFields = [
-        { key: 'city', label: t('city') },
-        { key: 'area', label: t('area') },
-        { key: 'block', label: t('block_placeholder') },
-        { key: 'street', label: t('street_placeholder') },
-        { key: 'building', label: t('building_placeholder') },
-        { key: 'phone', label: t('phone') }
-    ];
+    const requiredFields = selectedMethodId === 'cod'
+        ? [
+            { key: 'city', label: t('city') },
+            { key: 'area', label: t('area') },
+            { key: 'block', label: t('block_placeholder') },
+            { key: 'street', label: t('street_placeholder') },
+            { key: 'building', label: t('building_placeholder') },
+            { key: 'phone', label: t('phone') }
+          ]
+        : [
+            { key: 'city', label: t('city') }
+          ];
 
     const missingFields = requiredFields.filter(field => !formData[field.key]);
     const isAddressComplete = missingFields.length === 0;
 
     const handleConfirm = () => {
+        if (!selectedMethodId) return; // Add check for null
+
         if (selectedMethodId === 'cod') {
             onSubmit('cod');
+        } else if (selectedMethodId === 'deema') {
+            onSubmit('deema');
         } else {
             // It's an API method (KNET/Visa)
             // Send 'myfatoorah' as general type + the specific ID
@@ -74,6 +82,23 @@ const PaymentForm = ({ formData, onBack, onSubmit, cartTotal, paymentMethods = [
             <div className="form-card">
                 <div className="form-section-title">
                     {t('payment_methods_title')}
+                </div>
+
+                {/* Deema Installments */}
+                <div
+                    className={`payment-option ${selectedMethodId === "deema" ? "selected" : ""}`}
+                    onClick={() => setSelectedMethodId("deema")}
+                >
+                    <div className="payment-info">
+                        <img src={deema_image} className="payment-method-icon" style={{objectFit: 'contain'}} width={24} height={24} alt="Deema" />
+                        <span className="payment-option-text">
+                            {t('install_with_deema')}
+                        </span>
+                    </div>
+
+                    <div className="checkmark-icon">
+                        <FaCheck />
+                    </div>
                 </div>
 
                 {/* 1. KNET */}
@@ -136,20 +161,6 @@ const PaymentForm = ({ formData, onBack, onSubmit, cartTotal, paymentMethods = [
                     </div>
                 ))}
 
-                {/* 3. Cash On Delivery (Last) */}
-                <div
-                    className={`payment-option ${selectedMethodId === "cod" ? "selected" : ""}`}
-                    onClick={() => setSelectedMethodId("cod")}
-                >
-                    <div className="payment-info">
-                        <CiDeliveryTruck  className="payment-method-icon" size={24} color="#2d3436" />
-                        <span className="payment-option-text">{t('pay_cod')}</span>
-                    </div>
-
-                    <div className="checkmark-icon">
-                        <FaCheck />
-                    </div>
-                </div>
 
             </div>
 
@@ -162,6 +173,23 @@ const PaymentForm = ({ formData, onBack, onSubmit, cartTotal, paymentMethods = [
                     <span>
                         {formData.cityName} - {formData.areaName} - {formData.block} - {formData.street}
                     </span>
+                </div>
+            </div>
+
+            <div className="form-card">
+                 {/* 3. Cash On Delivery (Moved below address) */}
+                 <div
+                    className={`payment-option ${selectedMethodId === "cod" ? "selected" : ""}`}
+                    onClick={() => setSelectedMethodId("cod")}
+                >
+                    <div className="payment-info">
+                        <CiDeliveryTruck  className="payment-method-icon" size={24} color="#2d3436" />
+                        <span className="payment-option-text">{t('pay_cod')}</span>
+                    </div>
+
+                    <div className="checkmark-icon">
+                        <FaCheck />
+                    </div>
                 </div>
             </div>
 
@@ -188,10 +216,10 @@ const PaymentForm = ({ formData, onBack, onSubmit, cartTotal, paymentMethods = [
             </div>
 
             <button 
-                className={`btn-next ${!isAddressComplete ? 'disabled' : ''}`} 
-                onClick={isAddressComplete ? handleConfirm : null}
-                disabled={!isAddressComplete}
-                style={{ opacity: !isAddressComplete ? 0.5 : 1, cursor: !isAddressComplete ? 'not-allowed' : 'pointer' }}
+                className={`btn-next ${(!isAddressComplete || !selectedMethodId) ? 'disabled' : ''}`} 
+                onClick={isAddressComplete && selectedMethodId ? handleConfirm : null}
+                disabled={!isAddressComplete || !selectedMethodId}
+                style={{ opacity: (!isAddressComplete || !selectedMethodId) ? 0.5 : 1, cursor: (!isAddressComplete || !selectedMethodId) ? 'not-allowed' : 'pointer' }}
             >
                 {t('confirm_payment')}
             </button>

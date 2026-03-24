@@ -413,12 +413,19 @@
     color: #fff;
 }
 
+.optional-badge-text {
+    color: #27ae60;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-right: 5px;
+}
+
 /* Responsive adjustments */
 @media (max-width: 480px) {
    
     
     .form-card {
-        padding: 18px;
+        padding: 9px 18px;
     }
     
     .payment-option {

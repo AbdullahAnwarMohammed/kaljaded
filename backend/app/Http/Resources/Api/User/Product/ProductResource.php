@@ -55,6 +55,8 @@ class ProductResource extends JsonResource
             'date' => $this->date,
             'note' => $this->note,
             'merchant_id' => $this->iduserinsert,
+            'merchant_name' => $this->merchant ? ($this->merchant->name_vendor ?? $this->merchant->name) : 'K.D',
+            'merchant_slug' => $this->merchant ? $this->merchant->slug : null,
             'server_time' => now()->format('Y-m-d H:i:s'),
         ];
     }
