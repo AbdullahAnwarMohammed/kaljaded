@@ -57,7 +57,7 @@ export default defineConfig({
   server: {
     host: true,
     hmr: {
-        overlay: false,
+      overlay: false,
     },
   },
   base: '/dist/', // <--- مهم جدًا لو هتحط build في public/dist

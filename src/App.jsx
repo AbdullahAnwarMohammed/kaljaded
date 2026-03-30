@@ -49,6 +49,7 @@ const CompleteProfile = lazy(() => import("./Pages/CompleteProfile"));
 const Profile = lazy(() => import("./Pages/Profile"));
 const Notifications = lazy(() => import("./Pages/Notifications"));
 const AuthCallback = lazy(() => import("./Pages/AuthCallback"));
+const AccessoryDetails = lazyWithRetry(() => import("./Pages/AccessoryDetails"));
 const NotFound = lazy(() => import("./Pages/NotFound"));
 
 import EnrollmentCheck from "./components/EnrollmentCheck";
@@ -172,6 +173,16 @@ function App() {
                 element={
                   <MainLayout>
                     <ProductDeatils />
+                  </MainLayout>
+                }
+              />
+
+              {/* Accessory Details Route */}
+              <Route
+                path="/accessory/:identifier"
+                element={
+                  <MainLayout>
+                    <AccessoryDetails />
                   </MainLayout>
                 }
               />

@@ -22,7 +22,7 @@ class CartController extends Controller
     public function index(Request $request)
     {
         $cart = $this->resolveCart($request)
-            ->load('items.product');
+            ->load(['items.product']);
 
         return $this->successResponse([
             'cart' => new CartResource($cart),
@@ -43,33 +43,35 @@ class CartController extends Controller
 
         // جلب السلة والمنتج
         $cart     = $this->resolveCart($request);
-        $product  = Product::findOrFail($request->product_id);
+        $product  = Product::find($request->product_id);
+        
+        if (!$product) {
+            return $this->errorResponse('Product is required', 422);
+        }
+
         $quantity = $request->quantity ?? 1;
+        $price = $product->price;
 
         // استخدام transaction لضمان الأمان
-        DB::transaction(function () use ($cart, $product, $quantity) {
-
-            // تحقق إذا المنتج موجود بالسلة
+        DB::transaction(function () use ($cart, $product, $quantity, $price) {
             $item = $cart->items()->where('product_id', $product->id)->first();
 
             if ($item) {
-                // إذا موجود بالفعل، نزود الكمية
                 $item->update([
                     'quantity' => $item->quantity + $quantity,
-                    'price'    => $product->price,
+                    'price'    => $price,
                 ]);
             } else {
-                // إذا غير موجود، ننشئ السطر بالكمية المطلوبة
                 $cart->items()->create([
                     'product_id' => $product->id,
                     'quantity'   => $quantity,
-                    'price'      => $product->price,
+                    'price'      => $price,
                 ]);
             }
         });
 
         // إعادة تحميل السلة مع المنتجات
-        $cart->load('items.product');
+        $cart->load(['items.product']);
 
         // إعادة الاستجابة
         return $this->successResponse(
@@ -97,7 +99,7 @@ class CartController extends Controller
             'quantity' => $request->quantity,
         ]);
 
-        $cart = $cartItem->cart->load('items.product');
+        $cart = $cartItem->cart->load(['items.product']);
 
         return $this->successResponse([
             'cart' => new CartResource($cart),
@@ -114,7 +116,7 @@ class CartController extends Controller
         $cart = $cartItem->cart;
         $cartItem->delete();
 
-        $cart->load('items.product');
+        $cart->load(['items.product']);
 
         return $this->successResponse([
             'cart' => new CartResource($cart),
@@ -127,11 +129,10 @@ class CartController extends Controller
 
     protected function resolveCart(Request $request): Cart
     {
-
         // Auth user
-        if (auth()->check()) {
+        if ($user = $request->user()) {
             return Cart::firstOrCreate([
-                'user_id' => auth()->id(),
+                'user_id' => $user->id,
                 'status'  => 'active',
             ]);
         }
@@ -151,7 +152,7 @@ class CartController extends Controller
 
     public function mergeGuestCart(Request $request)
     {
-        $user = auth()->user();
+        $user = $request->user();
         if (!$user) {
             return $this->errorResponse('User not authenticated', 401);
         }
@@ -172,22 +173,24 @@ class CartController extends Controller
         DB::transaction(function () use ($guestCart, $userCart, $user) {
             if ($userCart) {
                 foreach ($guestCart->items as $item) {
-                    $existingItem = $userCart->items()->where('product_id', $item->product_id)->first();
+                    $existingItem = $userCart->items()
+                        ->where('product_id', $item->product_id)
+                        ->first();
+                    
                     if ($existingItem) {
-                        // حذف المنتج الموجود في سلة المستخدم
-                        $existingItem->delete();
+                        $existingItem->update([
+                            'quantity' => $existingItem->quantity + $item->quantity
+                        ]);
+                        $item->delete();
                     } else {
-                        // نقل المنتج من guestCart إلى userCart
                         $item->update([
                             'cart_id' => $userCart->id
                         ]);
                     }
                 }
 
-                // بعد الدمج، نحذف الـ guest cart
                 $guestCart->delete();
             } else {
-                // لو مفيش سلة للمستخدم، فقط نضيف user_id ونمسح guest_token
                 $guestCart->update([
                     'guest_token' => null,
                     'user_id' => $user->id
@@ -195,15 +198,13 @@ class CartController extends Controller
             }
         });
 
-
         $finalCart = Cart::where('user_id', $user->id)
             ->where('status', 'active')
-            ->with('items.product')
+            ->with(['items.product'])
             ->first();
 
         return $this->successResponse([
-            'cart' => $finalCart,
-            'total' => $finalCart->total(),
+            'cart' => new CartResource($finalCart),
         ], 'cart.merged');
     }
 
@@ -212,8 +213,8 @@ class CartController extends Controller
     {
         $cart = $cartItem->cart;
 
-        if (auth()->check()) {
-            abort_if($cart->user_id !== auth()->id(), 403);
+        if ($user = $request->user()) {
+            abort_if($cart->user_id !== $user->id, 403);
             return;
         }
 

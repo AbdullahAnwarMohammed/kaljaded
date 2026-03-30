@@ -78,6 +78,14 @@ class CategoryController extends Controller
             });
         }
 
+        if ($condition = $request->query('condition')) {
+            if ($condition === 'new') {
+                $productsQuery->where('product_active_new', 1);
+            } elseif ($condition === 'used') {
+                $productsQuery->where('product_active_new', 0);
+            }
+        }
+
         $products = $productsQuery->orderBy('id', 'desc')->paginate(25);
 
         return $this->successResponse([
@@ -128,6 +136,14 @@ class CategoryController extends Controller
                 $q->where('name', 'LIKE', "%{$search}%")
                     ->orWhere('nameen', 'LIKE', "%{$search}%");
             });
+        }
+
+        if ($condition = $request->query('condition')) {
+            if ($condition === 'new') {
+                $productsQuery->where('product_active_new', 1);
+            } elseif ($condition === 'used') {
+                $productsQuery->where('product_active_new', 0);
+            }
         }
 
         $products = $productsQuery->orderBy('id', 'desc')->paginate(25);

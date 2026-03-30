@@ -25,6 +25,7 @@ const ProductByCategory = ({ isInstallment = false }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [lastPage, setLastPage] = useState(1);
     const [categories, setCategories] = useState([]);
+    const [condition, setCondition] = useState('all'); // all, new, used
 
     const [hasInitialLoaded, setHasInitialLoaded] = useState(false);
 
@@ -35,7 +36,7 @@ const ProductByCategory = ({ isInstallment = false }) => {
     const fetchedSlugs = useRef(new Set());
 
     useEffect(() => {
-        const cacheKey = `products_${slug || 'all'}_${subSlug || ''}_${isInstallment}`;
+        const cacheKey = `products_${slug || 'all'}_${subSlug || ''}_${isInstallment}_${condition}`;
         const cached = localStorage.getItem(cacheKey);
         
         if (cached && !isLatest) {
@@ -50,7 +51,7 @@ const ProductByCategory = ({ isInstallment = false }) => {
             setHasInitialLoaded(false);
         }
 
-        const currentSlugKey = `${slug || 'all'}_${subSlug || ''}_${isInstallment}`;
+        const currentSlugKey = `${slug || 'all'}_${subSlug || ''}_${isInstallment}_${condition}`;
         // If we haven't fetched this slug in this session, or if it's the first load
         if (!fetchedSlugs.current.has(currentSlugKey) || isLatest) {
             if (currentPage === 1) {
@@ -65,7 +66,7 @@ const ProductByCategory = ({ isInstallment = false }) => {
             if (currentPage !== 1) setCurrentPage(1);
             setHasInitialLoaded(true);
         }
-    }, [slug, pathname, location.search, isInstallment]);
+    }, [slug, pathname, location.search, isInstallment, condition]);
 
     useEffect(() => {
         if (currentPage > 1) {
@@ -109,6 +110,10 @@ const ProductByCategory = ({ isInstallment = false }) => {
                 if (subSlug) url += `&sub=${subSlug}`;
             }
 
+            if (condition !== 'all') {
+                url += (url.includes('?') ? '&' : '?') + `condition=${condition}`;
+            }
+
              const res = await Api.get(url, { 
                  skipLoader: true, // Handle locally for smoother tab switching
                  cache: page === 1 
@@ -126,7 +131,7 @@ const ProductByCategory = ({ isInstallment = false }) => {
             setLastPage(meta.last_page);
 
             if (page === 1) {
-                 const cacheKey = `products_${slug || 'all'}_${subSlug || ''}_${isInstallment}`;
+                 const cacheKey = `products_${slug || 'all'}_${subSlug || ''}_${isInstallment}_${condition}`;
                  localStorage.setItem(cacheKey, JSON.stringify({
                      products: newProducts,
                      category: newCategoryData,
@@ -207,10 +212,6 @@ const ProductByCategory = ({ isInstallment = false }) => {
             {category?.subcategories?.length > 0 && (
                 <div className="subcategories-tabs">
                     <div className="subcategories-tabs-child">
-                        <Link
-                            className={`subcategory-tab ${!subSlug ? 'active' : ''}`}
-                            to={isInstallment ? `/category/installments/${slug || ''}` : `/category/${slug}`}
-                        >الكل</Link>
                         {category.subcategories.map(sub => (
                             <Link
                                 key={sub.id}
@@ -221,6 +222,36 @@ const ProductByCategory = ({ isInstallment = false }) => {
                     </div>
                 </div>
             )}
+
+            {/* فلتر الحالة */}
+            <div className="condition-tabs">
+                <div className="condition-tabs-child">
+                    <button
+                        className={`condition-tab ${condition === 'all' ? 'active' : ''}`}
+                        onClick={() => {
+                            setCondition('all');
+                            setProducts([]);
+                            setCurrentPage(1);
+                        }}
+                    >الكل</button>
+                    <button
+                        className={`condition-tab ${condition === 'new' ? 'active' : ''}`}
+                        onClick={() => {
+                            setCondition('new');
+                            setProducts([]);
+                            setCurrentPage(1);
+                        }}
+                    >جديد</button>
+                    <button
+                        className={`condition-tab ${condition === 'used' ? 'active' : ''}`}
+                        onClick={() => {
+                            setCondition('used');
+                            setProducts([]);
+                            setCurrentPage(1);
+                        }}
+                    >مستعمل</button>
+                </div>
+            </div>
 
             {/* المنتجات */}
             <div className="products-row">

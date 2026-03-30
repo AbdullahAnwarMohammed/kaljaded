@@ -34,6 +34,14 @@ class ProductController extends Controller
                 ->orWhere('nameen', 'LIKE', "%{$search}%");
         }
 
+        if ($condition = $request->query('condition')) {
+            if ($condition === 'new') {
+                $query->where('product_active_new', 1);
+            } elseif ($condition === 'used') {
+                $query->where('product_active_new', 0);
+            }
+        }
+
         $products = $query->paginate($perPage);
 
         return $this->successResponse([
@@ -53,31 +61,44 @@ class ProductController extends Controller
             ->where('slug', $slug)
             ->first();
 
-        if (! $product) {
+        if (!$product) {
             return $this->errorResponse('messages.product_not_found', 404);
         }
 
         $this->recordView($product);
 
-        return $this->successResponse(
-            new ProductResource($product),
-            'messages.product_details'
-        );
+        $similarProducts = Product::where('category_id', $product->category_id)
+            ->where('id', '!=', $product->id)
+            ->where('isactive', 1)
+            ->limit(10)
+            ->get();
+
+        return $this->successResponse([
+            'product' => new ProductResource($product),
+            'similar_products' => ProductResource::collection($similarProducts),
+        ], 'messages.product_details');
     }
+
     public function show($id)
     {
         $product = Product::with(['category', 'subcategory', 'subsubcategory', 'merchant'])->find($id);
 
-        if (! $product) {
+        if (!$product) {
             return $this->errorResponse('messages.product_not_found', 404);
         }
 
         $this->recordView($product);
 
-        return $this->successResponse(
-            new ProductResource($product),
-            'messages.product_details'
-        );
+        $similarProducts = Product::where('category_id', $product->category_id)
+            ->where('id', '!=', $product->id)
+            ->where('isactive', 1)
+            ->limit(10)
+            ->get();
+
+        return $this->successResponse([
+            'product' => new ProductResource($product),
+            'similar_products' => ProductResource::collection($similarProducts),
+        ], 'messages.product_details');
     }
 
     public function latest(Request $request)
@@ -98,6 +119,14 @@ class ProductController extends Controller
                 $q->where('name', 'LIKE', "%{$search}%")
                     ->orWhere('nameen', 'LIKE', "%{$search}%");
             });
+        }
+
+        if ($condition = $request->query('condition')) {
+            if ($condition === 'new') {
+                $query->where('product_active_new', 1);
+            } elseif ($condition === 'used') {
+                $query->where('product_active_new', 0);
+            }
         }
 
         $products = $query->paginate($perPage);
@@ -195,6 +224,14 @@ class ProductController extends Controller
                 $q->where('name', 'LIKE', "%{$search}%")
                     ->orWhere('nameen', 'LIKE', "%{$search}%");
             });
+        }
+
+        if ($condition = $request->query('condition')) {
+            if ($condition === 'new') {
+                $productsQuery->where('product_active_new', 1);
+            } elseif ($condition === 'used') {
+                $productsQuery->where('product_active_new', 0);
+            }
         }
         $products = $productsQuery->paginate(25);
         return $this->successResponse([

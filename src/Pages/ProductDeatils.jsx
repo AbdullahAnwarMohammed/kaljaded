@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Helmet } from "react-helmet";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { RiArrowRightLine, RiSecurePaymentLine, RiShoppingCartLine, RiStore2Line } from "react-icons/ri";
+import { RiArrowRightLine, RiSecurePaymentLine, RiShoppingCartLine, RiStore2Line, RiAddLine } from "react-icons/ri";
 import { FaRegEye, FaCommentAlt, FaArrowLeft, FaWindowClose, FaCalendarAlt, FaStar, FaCog, FaArrowCircleLeft } from "react-icons/fa";
 import { IoCheckmarkDoneCircle } from "react-icons/io5";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -24,9 +24,12 @@ import "./ProductDetails.css";
 
 import { IoLogoInstagram } from "react-icons/io";
 import { useTranslation } from "react-i18next";
+import ProductCard from "../components/CategorySection/ProductCard";
+
 const ProductDetails = () => {
   const { id, slug } = useParams();
   const [product, setProduct] = useState(null);
+  const [similarProducts, setSimilarProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isPopupOpenFixed, setIsPopupOpenFixed] = useState(false);
   const [isPopupOpenDynamic, setIsPopupOpenDynamic] = useState(false);
@@ -39,6 +42,7 @@ const ProductDetails = () => {
   // جلب المنتج عند تحميل الصفحة
   useEffect(() => {
     const fetchProduct = async () => {
+      setProduct(null); // Reset when navigating to a new product
       try {
         let res;
         if (id) {
@@ -47,7 +51,11 @@ const ProductDetails = () => {
           res = await Api.get(`/products/showBySlug/${slug}`);
         }
 
-        if (res.data.success) setProduct(res.data.data);
+        if (res.data.success) {
+          setProduct(res.data.data.product || res.data.data);
+          setSimilarProducts(res.data.data.similar_products || []);
+          window.scrollTo(0, 0); // Scroll to top when data arrives
+        }
       } catch (err) {
         console.error(err);
       }
@@ -60,24 +68,32 @@ const ProductDetails = () => {
 
   // إضافة المنتج للسلة
 
-  const handleAddToCart = async () => {
-    if (!product || loading) return;
+  const handleAddToCart = async (item = product, isAccessory = false) => {
+    if (!item || loading) return;
 
     setLoading(true);
     try {
       const latestCart = await fetchCart();
-      const existingItem = latestCart?.items?.find(item => item.product?.id == product.id);
+      const existingItem = latestCart?.items?.find(i => 
+        isAccessory ? i.accessory?.id == item.id : i.product?.id == item.id
+      );
 
       if (existingItem) {
         await updateCartItem(existingItem.id, existingItem.quantity + 1);
       } else {
-        await addToCart(product.id, 1);
+        if (isAccessory) {
+          await Api.post("/cart/items", { accessory_id: item.id, quantity: 1 });
+        } else {
+          await addToCart(item.id, 1);
+        }
       }
 
       await fetchCart();
 
-      // التحويل إلى صفحة السلة بعد الإضافة
-      navigate("/");
+      // التحويل إلى صفحة السلة بعد الإضافة فقط للمنتجات
+      if (!isAccessory) {
+          navigate("/carts");
+      }
 
     } catch (err) {
       console.error(err);
@@ -137,9 +153,9 @@ const ProductDetails = () => {
   const isAr = i18n.language === 'ar';
 
   return (
-    <div className="product-details-page" dir={isAr ? "rtl" : "ltr"}>
+    <div className="product-details-page" dir={isAr ? "rtl" : "ltr"} key={id || slug}>
       <Helmet>
-        <title>{product.name} | {t("like_new")}</title>
+        <title>{`${product.name} | ${t("like_new")}`}</title>
         <meta name="description" content={product.note || `${t("buy_now")} ${product.name}`} />
 
         {/* Open Graph / Facebook / WhatsApp */}
@@ -259,7 +275,7 @@ const ProductDetails = () => {
             {!cartItem ? (
               <button
                 className="buy-now"
-                onClick={handleAddToCart}
+                onClick={() => handleAddToCart(product, false)}
                 disabled={loading || !cart}
               >
                 {t("add_to_cart_and_continue_shopping")}
@@ -277,6 +293,31 @@ const ProductDetails = () => {
 
           <h3>{t("payment_secured")} <RiSecurePaymentLine /></h3>
         </div>
+
+        {/* Similar Products Section */}
+        {similarProducts && similarProducts.length > 0 && (
+          <div className="similar-products-section">
+            <h5 className="section-title">{t("similar_products")}</h5>
+            <Swiper
+              spaceBetween={5}
+              slidesPerView={2.2}
+              breakpoints={{
+                640: { slidesPerView: 3.2 },
+                768: { slidesPerView: 4.2 },
+                1024: { slidesPerView: 5.2 },
+              }}
+              dir={isAr ? "rtl" : "ltr"}
+            >
+              {similarProducts.map((p) => {
+                return (
+                  <SwiperSlide key={p.id}>
+                    <ProductCard p={p} />
+                  </SwiperSlide>
+                );
+              })}
+            </Swiper>
+          </div>
+        )}
       </div>
 
       {/* Popups */}

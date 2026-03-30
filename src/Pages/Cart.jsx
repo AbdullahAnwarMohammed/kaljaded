@@ -19,6 +19,7 @@ const Cart = () => {
     if (!cart) {
       fetchCart().finally(() => setLoading(false));
     } else {
+      console.log("Current Cart Data:", cart);
       setLoading(false);
     }
   }, [cart]);
@@ -58,37 +59,62 @@ const Cart = () => {
         =============================== */}
         {cart && cart.items.length > 0 ? (
           <section className="cart-items" id="cartItems">
-            {cart.items
-              .filter((item) => item.product)
-              .map((item) => (
+            {cart.items.map((item) => {
+              const displayItem = item.product || item.accessory;
+              if (!displayItem) return null;
+
+              const detailLink = item.product 
+                ? `/product/${item.product.id}/${item.product.slug}`
+                : `/accessory/${item.accessory.slug || item.accessory.id}`;
+
+              return (
                 <div className="cart-item" data-id={item.id} key={item.id}>
-                  <div className="item-image">
+                  <Link to={detailLink} className="item-image">
                     <img
-                      src={item.product?.image}
-                      alt={item.product?.name}
+                      src={item.product ? item.product.image : (item.accessory.images?.[0])}
+                      alt={displayItem.name}
                     />
-                  </div>
+                  </Link>
 
                   <div className="item-details">
-                    <h3 className="item-title">{item.product?.name}</h3>
+                    <Link to={detailLink} className="item-title-link">
+                        <h3 className="item-title">{displayItem.name}</h3>
+                    </Link>
 
-                    <div className="item-price">{item.price} K.D</div>
+                    <div className="item-price">
+                      {item.accessory && item.accessory.discount > 0 ? (
+                        <div className="accessory-pricing">
+                           <span className="price-sale">{item.price} K.D</span>
+                           <span className="price-old">{item.accessory.price} K.D</span>
+                        </div>
+                      ) : (
+                        <>{item.price} K.D</>
+                      )}
+                    </div>
 
                     <div className="attributes">
-                      {item.ramsize > 0 && (
-                        <div className="attribute">{item.ramsize} RAM</div>
+                      {item.product ? (
+                        <>
+                          {item.product.ramsize > 0 && (
+                            <div className="attribute">{item.product.ramsize} RAM</div>
+                          )}
+                          {item.product.color && (
+                            <div className="attribute">{item.product.color}</div>
+                          )}
+                          {item.product.memorysize > 0 && (
+                            <div className="attribute">{item.product.memorysize} GB</div>
+                          )}
+                          <div className="attribute">
+                            {item.product.device_box == 1
+                              ? t("box_included")
+                              : t("box_not_included")}
+                          </div>
+                        </>
+                      ) : (
+                        <div className="attribute">
+                          {t("accessory")}
+                        </div>
                       )}
-                      {item.color && (
-                        <div className="attribute">{item.color}</div>
-                      )}
-                      {item.memorysize > 0 && (
-                        <div className="attribute">{item.memorysize} GB</div>
-                      )}
-                      <div className="attribute">
-                        {item.product?.device_clean == 100
-                          ? t("box_included")
-                          : t("box_not_included")}
-                      </div>
                     </div>
 
                     <button
@@ -99,7 +125,8 @@ const Cart = () => {
                     </button>
                   </div>
                 </div>
-              ))}
+              );
+            })}
           </section>
         ) : (
           /* ===============================

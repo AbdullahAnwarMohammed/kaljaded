@@ -52,4 +52,9 @@ class SubCategory extends Model
     {
         return $this->hasMany(SubSubCategory::class, 'sub_category_id');
     }
+
+    public function accessories()
+    {
+        return $this->belongsToMany(Accessory::class, 'accessory_sub_category');
+    }
 }

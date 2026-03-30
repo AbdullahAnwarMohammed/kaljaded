@@ -60,6 +60,12 @@
   justify-content: center;
 }
 
+.page-carts .item-title-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
 .page-carts .item-title {
   font-size: 1.1rem;
   font-weight: 700;
@@ -73,6 +79,24 @@
   font-weight: 700;
   color: #283158; /* Theme primary color */
   margin-bottom: 8px;
+}
+
+.page-carts .accessory-pricing {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.page-carts .price-sale {
+  color: #FF4757;
+  font-weight: 800;
+}
+
+.page-carts .price-old {
+  font-size: 0.85rem;
+  color: #a4b0be;
+  text-decoration: line-through;
+  font-weight: 500;
 }
 
 /* Attributes (Tags) */
